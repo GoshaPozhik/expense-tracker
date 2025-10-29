@@ -11,6 +11,5 @@ public interface ExpenseDao {
     List<Expense> findAllByWalletId(long walletId);
     Optional<Expense> findById(long id);
     void delete(long id);
-    // Можно добавить и другие методы, например, update
     void update(Expense expense);
 }
