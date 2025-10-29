@@ -1,0 +1,187 @@
+package ru.itis.expensetracker.dao.impl;
+
+
+import ru.itis.expensetracker.dao.WalletDao;
+import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.model.Wallet;
+import ru.itis.expensetracker.util.DatabaseManager;
+
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public class JdbcWalletDao implements WalletDao {
+    private static final String SAVE_WALLET_SQL = "INSERT INTO wallets (name, owner_id) VALUES (?, ?)";
+    private static final String ADD_USER_TO_WALLET_SQL = "INSERT INTO user_wallets (user_id, wallet_id) VALUES (?, ?)";
+    private static final String FIND_BY_ID_SQL = "SELECT id, name, owner_id FROM wallets WHERE id = ?";
+    private static final String FIND_ALL_BY_USER_ID_SQL =
+            "SELECT w.id, w.name, w.owner_id FROM wallets w " +
+                    "JOIN user_wallets uw ON w.id = uw.wallet_id " +
+                    "WHERE uw.user_id = ?";
+    private static final String UPDATE_SQL = "UPDATE wallets SET name = ? WHERE id = ?";
+    private static final String DELETE_SQL = "DELETE FROM wallets WHERE id = ?";
+    private static final String IS_SHARED_WITH_SQL = "SELECT 1 FROM wallet_shares WHERE wallet_id = ? AND user_id = ?";
+    private static final String FIND_OWNER_ID_SQL = "SELECT owner_id FROM wallets WHERE id = ?";
+
+    @Override
+    public Wallet save(Wallet wallet) {
+        Connection connection = null;
+        try {
+            connection = DatabaseManager.getConnection();
+            connection.setAutoCommit(false); // Начало транзакции
+            // 1. Сохраняем сам кошелек
+            try (PreparedStatement walletStmt = connection.prepareStatement(SAVE_WALLET_SQL, Statement.RETURN_GENERATED_KEYS)) {
+                walletStmt.setString(1, wallet.getName());
+                walletStmt.setLong(2, wallet.getOwnerId());
+                walletStmt.executeUpdate();
+                try (ResultSet generatedKeys = walletStmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        wallet.setId(generatedKeys.getLong(1));
+                    } else {
+                        throw new SQLException("Creating wallet failed, no ID obtained.");
+                    }
+                }
+            }
+            // 2. Добавляем владельца в связующую таблицу
+            addUserToWalletInternal(connection, wallet.getOwnerId(), wallet.getId());
+            connection.commit(); // Фиксация транзакции
+            return wallet;
+        } catch (SQLException e) {
+            if (connection != null) {
+                try {
+                    connection.rollback(); // Откат транзакции в случае ошибки
+                } catch (SQLException ex) {
+                    throw new DaoException("Error during transaction rollback", ex);
+                }
+            }
+            throw new DaoException("Error saving wallet", e);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    @Override
+    public void addUserToWallet(long userId, long walletId) {
+        try (Connection connection = DatabaseManager.getConnection()) {
+            addUserToWalletInternal(connection, userId, walletId);
+        } catch (SQLException e) {
+            // Обрабатываем возможное нарушение unique constraint (пользователь уже добавлен)
+            if ("23505".equals(e.getSQLState())) { // Код ошибки для unique_violation в PostgreSQL
+                // Можно просто проигнорировать или залогировать, т.к. цель достигнута - юзер в кошельке
+                System.out.println("User " + userId + " is already in wallet " + walletId);
+            } else {
+                throw new DaoException("Error adding user to wallet", e);
+            }
+        }
+    }
+    private void addUserToWalletInternal(Connection connection, long userId, long walletId) throws SQLException {
+        try (PreparedStatement linkStmt = connection.prepareStatement(ADD_USER_TO_WALLET_SQL)) {
+            linkStmt.setLong(1, userId);
+            linkStmt.setLong(2, walletId);
+            linkStmt.executeUpdate();
+        }
+    }
+
+    @Override
+    public List<Wallet> findAllByUserId(long userId) {
+        List<Wallet> wallets = new ArrayList<>();
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_ALL_BY_USER_ID_SQL)) {
+            statement.setLong(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    wallets.add(mapRowToWallet(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Error finding wallets for user " + userId, e);
+        }
+        return wallets;
+    }
+    // Методы findById, update, delete реализуются аналогично JdbcUserDao
+    @Override
+    public Optional<Wallet> findById(long id) {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(FIND_BY_ID_SQL)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRowToWallet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Error finding wallet by id: " + id, e);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public void update(Wallet wallet) {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(UPDATE_SQL)) {
+            stmt.setString(1, wallet.getName());
+            stmt.setLong(2, wallet.getId());
+            int updated = stmt.executeUpdate();
+            if (updated == 0) {
+                throw new DaoException("No wallet updated with id " + wallet.getId(), null);
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Error updating wallet with id " + wallet.getId(), e);
+        }
+    }
+    @Override
+    public void delete(long id) {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(DELETE_SQL)) {
+            stmt.setLong(1, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DaoException("Error deleting wallet with id " + id, e);
+        }
+    }
+
+    private Wallet mapRowToWallet(ResultSet resultSet) throws SQLException {
+        return Wallet.builder()
+                .id(resultSet.getLong("id"))
+                .name(resultSet.getString("name"))
+                .ownerId(resultSet.getLong("owner_id"))
+                .build();
+    }
+
+    @Override
+    public boolean isSharedWith(long walletId, long userId) {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(IS_SHARED_WITH_SQL)) {
+            statement.setLong(1, walletId);
+            statement.setLong(2, userId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next(); // Если есть хоть одна строка, значит доступ есть
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Error checking wallet share for wallet " + walletId, e);
+        }
+    }
+    @Override
+    public Optional<Long> findOwnerId(long walletId) {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(FIND_OWNER_ID_SQL)) {
+            statement.setLong(1, walletId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(rs.getLong("owner_id"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("Error finding owner for wallet " + walletId, e);
+        }
+        return Optional.empty();
+    }
+}
