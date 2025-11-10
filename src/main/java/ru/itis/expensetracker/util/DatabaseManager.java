@@ -19,7 +19,6 @@ public class DatabaseManager {
                 Class.forName(properties.getProperty("db.driver"));
             }
         } catch (IOException | ClassNotFoundException e) {
-            // В реальном приложении здесь должен быть логгер
             e.printStackTrace();
             throw new RuntimeException("Failed to load database properties or driver", e);
         }

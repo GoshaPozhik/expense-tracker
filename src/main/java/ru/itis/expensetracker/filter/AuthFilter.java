@@ -17,19 +17,16 @@ public class AuthFilter implements Filter {
 
         String uri = request.getRequestURI();
 
-        // Разрешаем доступ к страницам логина, регистрации и статическим ресурсам (css, js)
         if (uri.endsWith("/login") || uri.endsWith("/register") || uri.endsWith(".css") || uri.endsWith(".js")) {
             chain.doFilter(request, response);
             return;
         }
 
-        HttpSession session = request.getSession(false); // false - не создавать новую сессию, если ее нет
+        HttpSession session = request.getSession(false);
 
-        // Если сессии нет или в ней нет атрибута "user", перенаправляем на страницу входа
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
         } else {
-            // Пользователь авторизован, пропускаем запрос дальше
             chain.doFilter(request, response);
         }
     }

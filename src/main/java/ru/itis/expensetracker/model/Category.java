@@ -7,5 +7,5 @@ import lombok.Data;
 public class Category {
     private Long id;
     private String name;
-    private Long userId; // null, если категория общая
+    private Long userId;
 }

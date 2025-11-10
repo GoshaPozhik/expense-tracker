@@ -23,7 +23,6 @@ public class JdbcCategoryDao implements CategoryDao {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, category.getName());
-            // Используем setNull, если ID пользователя не задан (общая категория)
             if (category.getUserId() == null) {
                 statement.setNull(2, Types.BIGINT);
             } else {
@@ -115,7 +114,7 @@ public class JdbcCategoryDao implements CategoryDao {
         return Category.builder()
                 .id(rs.getLong("id"))
                 .name(rs.getString("name"))
-                .userId(rs.getObject("user_id", Long.class)) // getObject позволяет безопасно получить null
+                .userId(rs.getObject("user_id", Long.class))
                 .build();
     }
 }

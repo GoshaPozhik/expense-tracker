@@ -82,19 +82,6 @@ main {
     font-size: 0.9rem;
 }
 
-/*. // auth-button {*/
-/*    background: var(--pastel-lavender);*/
-/*    color: var(--text-dark);*/
-/*    border-radius: var(--radius-small);*/
-/*    padding: 0.5rem 1.25rem;*/
-/*    transition: all 0.2s ease;*/
-/*}*/
-
-/* .auth-button:hover {*/
-/*    background: var(--pastel-lilac);*/
-/*    color: var(--text-dark);*/
-/*}*/
-
 .navbar-toggler {
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-small);

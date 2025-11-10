@@ -16,11 +16,6 @@
     <main class="container mt-4">
         <jsp:doBody/>
     </main>
-<%--    <footer class="footer mt-auto py-3 position-absolute bottom-0 w-100">--%>
-<%--        <div class="container text-center">--%>
-<%--            <span class="text-muted">&copy; 2025 Finance Tracker. Все права защищены.</span>--%>
-<%--        </div>--%>
-<%--    </footer>--%>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

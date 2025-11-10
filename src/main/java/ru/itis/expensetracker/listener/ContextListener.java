@@ -25,23 +25,20 @@ public class ContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         ServletContext servletContext = sce.getServletContext();
 
-        // Создаем экземпляры DAO
         UserDao userDao = new JdbcUserDao();
         WalletDao walletDao = new JdbcWalletDao();
         CategoryDao categoryDao = new JdbcCategoryDao();
         ExpenseDao expenseDao = new JdbcExpenseDao();
 
-        // Создаем экземпляры сервисов, внедряя в них DAO
         AuthService authService = new AuthServiceImpl(userDao, walletDao);
         WalletService walletService = new WalletServiceImpl(walletDao, expenseDao, categoryDao, userDao);
 
-        // Сохраняем сервисы в ServletContext, чтобы они были доступны всем сервлетам
         servletContext.setAttribute("authService", authService);
         servletContext.setAttribute("walletService", walletService);
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        // Здесь можно освобождать ресурсы, если это необходимо
+
     }
 }

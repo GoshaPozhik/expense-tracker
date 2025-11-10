@@ -28,8 +28,7 @@ public class JdbcWalletDao implements WalletDao {
         Connection connection = null;
         try {
             connection = DatabaseManager.getConnection();
-            connection.setAutoCommit(false); // Начало транзакции
-            // 1. Сохраняем сам кошелек
+            connection.setAutoCommit(false);
             try (PreparedStatement walletStmt = connection.prepareStatement(SAVE_WALLET_SQL, Statement.RETURN_GENERATED_KEYS)) {
                 walletStmt.setString(1, wallet.getName());
                 walletStmt.setLong(2, wallet.getOwnerId());
@@ -42,14 +41,13 @@ public class JdbcWalletDao implements WalletDao {
                     }
                 }
             }
-            // 2. Добавляем владельца в связующую таблицу
             addUserToWalletInternal(connection, wallet.getOwnerId(), wallet.getId());
-            connection.commit(); // Фиксация транзакции
+            connection.commit();
             return wallet;
         } catch (SQLException e) {
             if (connection != null) {
                 try {
-                    connection.rollback(); // Откат транзакции в случае ошибки
+                    connection.rollback();
                 } catch (SQLException ex) {
                     throw new DaoException("Error during transaction rollback", ex);
                 }
@@ -71,9 +69,7 @@ public class JdbcWalletDao implements WalletDao {
         try (Connection connection = DatabaseManager.getConnection()) {
             addUserToWalletInternal(connection, userId, walletId);
         } catch (SQLException e) {
-            // Обрабатываем возможное нарушение unique constraint (пользователь уже добавлен)
-            if ("23505".equals(e.getSQLState())) { // Код ошибки для unique_violation в PostgreSQL
-                // Можно просто проигнорировать или залогировать, т.к. цель достигнута - юзер в кошельке
+            if ("23505".equals(e.getSQLState())) {
                 System.out.println("User " + userId + " is already in wallet " + walletId);
             } else {
                 throw new DaoException("Error adding user to wallet", e);
@@ -104,7 +100,7 @@ public class JdbcWalletDao implements WalletDao {
         }
         return wallets;
     }
-    // Методы findById, update, delete реализуются аналогично JdbcUserDao
+
     @Override
     public Optional<Wallet> findById(long id) {
         try (Connection connection = DatabaseManager.getConnection();
