@@ -4,7 +4,6 @@ import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.service.WalletService;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -23,22 +22,51 @@ public class ShareWalletServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String emailToShare = req.getParameter("emailToShare");
-        long walletId = Long.parseLong(req.getParameter("walletId"));
-        User owner = (User) req.getSession().getAttribute("user");
-
-        String redirectUrl = req.getContextPath() + "/expenses?walletId=" + walletId;
-
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            walletService.shareWallet(walletId, owner.getId(), emailToShare);
-            // Добавляем параметр успеха для отображения сообщения
-            redirectUrl += "&share_success=true";
-        } catch (ServiceException e) {
-            // Добавляем параметр ошибки
-            redirectUrl += "&share_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
-        }
+            String emailToShare = req.getParameter("emailToShare");
+            String walletIdParam = req.getParameter("walletId");
+            User owner = (User) req.getSession().getAttribute("user");
 
-        resp.sendRedirect(redirectUrl);
+            if (owner == null) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Пользователь не авторизован.");
+                return;
+            }
+
+            if (emailToShare == null || emailToShare.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Email не может быть пустым.");
+                return;
+            }
+
+            if (walletIdParam == null || walletIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID кошелька не указан.");
+                return;
+            }
+
+            long walletId = Long.parseLong(walletIdParam);
+            String redirectUrl = req.getContextPath() + "/expenses?walletId=" + walletId;
+
+            walletService.shareWallet(walletId, owner.getId(), emailToShare.trim());
+            redirectUrl += "&share_success=true";
+            resp.sendRedirect(redirectUrl);
+        } catch (NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
+        } catch (ServiceException e) {
+            String walletIdParam = req.getParameter("walletId");
+            if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
+                try {
+                    long walletId = Long.parseLong(walletIdParam);
+                    String redirectUrl = req.getContextPath() + "/expenses?walletId=" + walletId;
+                    redirectUrl += "&share_error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+                    resp.sendRedirect(redirectUrl);
+                } catch (NumberFormatException ex) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                }
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            }
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при предоставлении доступа к кошельку.");
+        }
     }
 }

@@ -1,8 +1,6 @@
 package ru.itis.expensetracker.dao;
 
-
 import ru.itis.expensetracker.model.Expense;
-
 import java.util.List;
 import java.util.Optional;
 

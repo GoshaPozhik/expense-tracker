@@ -1,45 +1,44 @@
 package ru.itis.expensetracker.controller.wallets;
 
-import ru.itis.expensetracker.dao.WalletDao;
-import ru.itis.expensetracker.dao.impl.JdbcWalletDao;
+import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.User;
-import ru.itis.expensetracker.model.Wallet;
+import ru.itis.expensetracker.service.WalletService;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/wallets/create")
 public class CreateWalletServlet extends HttpServlet {
-    private WalletDao walletDao; // Используем DAO, т.к. логика проста
+    private WalletService walletService;
 
     @Override
     public void init() {
-        // Получим walletDao из контекста, как и сервисы
-        // Для этого его тоже нужно положить в ContextListener
-        walletDao = (WalletDao) getServletContext().getAttribute("walletDao");
+        walletService = (WalletService) getServletContext().getAttribute("walletService");
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if (walletDao == null) { // Нужно нормально настроить это потому что пока это показывает нулл и зависимость жддбс подключается лишняя
-            walletDao = new JdbcWalletDao(); // или другая имплементация
-        }
-        String walletName = req.getParameter("walletName");
-        User user = (User) req.getSession().getAttribute("user");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        try {
+            String walletName = req.getParameter("walletName");
+            User user = (User) req.getSession().getAttribute("user");
 
-        if (walletName != null && !walletName.isBlank()) {
-            Wallet newWallet = Wallet.builder()
-                    .name(walletName)
-                    .ownerId(user.getId())
-                    .build();
-            walletDao.save(newWallet);
-        }
+            if (user == null) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Пользователь не авторизован.");
+                return;
+            }
 
-        // Перенаправляем на главную страницу, где появится новый кошелек
-        resp.sendRedirect(req.getContextPath() + "/home");
+            walletService.createWallet(walletName, user.getId());
+            resp.sendRedirect(req.getContextPath() + "/home");
+        } catch (ServiceException e) {
+            req.setAttribute("error", e.getMessage());
+            resp.sendRedirect(req.getContextPath() + "/home?error=" + URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при создании кошелька.");
+        }
     }
 }

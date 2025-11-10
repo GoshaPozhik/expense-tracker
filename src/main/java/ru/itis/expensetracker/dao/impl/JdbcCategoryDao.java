@@ -4,19 +4,19 @@ import ru.itis.expensetracker.dao.CategoryDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.util.DatabaseManager;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class JdbcCategoryDao implements CategoryDao {
+
     private static final String SAVE_SQL = "INSERT INTO categories (name, user_id) VALUES (?, ?)";
     private static final String FIND_BY_ID_SQL = "SELECT id, name, user_id FROM categories WHERE id = ?";
     private static final String FIND_AVAILABLE_SQL = "SELECT id, name, user_id FROM categories WHERE user_id = ? OR user_id IS NULL";
+    private static final String FIND_ALL_SQL = "SELECT id, name, user_id FROM categories";
     private static final String UPDATE_SQL = "UPDATE categories SET name = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM categories WHERE id = ?";
-    private static final String FIND_ALL_SQL = "SELECT id, name, user_id FROM categories";
 
     @Override
     public Category save(Category category) {
@@ -73,17 +73,6 @@ public class JdbcCategoryDao implements CategoryDao {
         }
         return categories;
     }
-    @Override
-    public void update(Category category) { /* ... */ }
-    @Override
-    public void delete(long id) { /* ... */ }
-    private Category mapRowToCategory(ResultSet rs) throws SQLException {
-        return Category.builder()
-                .id(rs.getLong("id"))
-                .name(rs.getString("name"))
-                .userId(rs.getObject("user_id", Long.class)) // getObject позволяет безопасно получить null
-                .build();
-    }
 
     @Override
     public List<Category> findAll() {
@@ -98,5 +87,35 @@ public class JdbcCategoryDao implements CategoryDao {
             throw new DaoException("Error finding all categories", e);
         }
         return categories;
+    }
+
+    @Override
+    public void update(Category category) {
+        try (Connection connection = DatabaseManager.getConnection();
+            PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
+            statement.setString(1, category.getName());
+            statement.setLong(2, category.getId());
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DaoException("Error updating category with id " + category.getId(), e);
+        }
+    }
+    @Override
+    public void delete(long id) {
+        try (Connection connection = DatabaseManager.getConnection();
+            PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
+            statement.setLong(1,id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DaoException("Error deleting category with id " + id, e);
+        }
+    }
+
+    private Category mapRowToCategory(ResultSet rs) throws SQLException {
+        return Category.builder()
+                .id(rs.getLong("id"))
+                .name(rs.getString("name"))
+                .userId(rs.getObject("user_id", Long.class)) // getObject позволяет безопасно получить null
+                .build();
     }
 }

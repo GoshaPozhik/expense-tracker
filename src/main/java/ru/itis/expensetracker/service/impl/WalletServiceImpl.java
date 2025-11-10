@@ -7,16 +7,17 @@ import ru.itis.expensetracker.dao.WalletDao;
 import ru.itis.expensetracker.dto.ExpenseDetailDto;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.exception.ServiceException;
+import ru.itis.expensetracker.model.Category;
+import ru.itis.expensetracker.model.Expense;
+import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.model.Wallet;
 import ru.itis.expensetracker.service.WalletService;
-import ru.itis.expensetracker.model.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 
 public class WalletServiceImpl implements WalletService {
 
@@ -44,17 +45,13 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public List<ExpenseDetailDto> getDetailedExpensesForWallet(long walletId) {
-        // 1. Получаем все расходы
         List<Expense> expenses = expenseDao.findAllByWalletId(walletId);
-        // 2. Преобразуем их в DTO, обогащая данными из других таблиц
         return expenses.stream()
                 .map(this::mapToDetailDto)
                 .collect(Collectors.toList());
     }
 
     private ExpenseDetailDto mapToDetailDto(Expense expense) {
-        // Запросы к DAO внутри map могут быть неэффективны на больших объемах (N+1 проблема).
-        // Для курсового проекта это приемлемо. В продакшене это решается одним сложным JOIN-запросом.
         String categoryName = categoryDao.findById(expense.getCategoryId())
                 .map(Category::getName)
                 .orElse("Без категории");
@@ -73,18 +70,15 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public List<Category> getAvailableCategoriesForUser(long userId) {
-        // Возвращаем и общие (дефолтные), и личные категории пользователя
         return categoryDao.findAvailableForUser(userId);
     }
 
     @Override
     public Expense addExpense(BigDecimal amount, String description, long userId, long walletId, long categoryId) throws ServiceException {
-        // Проверка бизнес-правил
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ServiceException("Сумма расхода должна быть положительной.");
         }
 
-        // Проверка, имеет ли пользователь доступ к этому кошельку (важная проверка безопасности!)
         boolean hasAccess = walletDao.findAllByUserId(userId).stream()
                 .anyMatch(wallet -> wallet.getId().equals(walletId));
         if (!hasAccess) {
@@ -108,25 +102,20 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public void shareWallet(long walletId, long ownerId, String emailToShare) throws ServiceException {
-        // 1. Находим пользователя, с которым хотим поделиться
         User userToShareWith = userDao.findByEmail(emailToShare)
                 .orElseThrow(() -> new ServiceException("Пользователь с email '" + emailToShare + "' не найден."));
 
-        // 2. Находим кошелек
         Wallet wallet = walletDao.findById(walletId)
                 .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
 
-        // 3. Проверяем права: только владелец может делиться кошельком
         if (!wallet.getOwnerId().equals(ownerId)) {
             throw new ServiceException("Вы не являетесь владельцем этого кошелька и не можете им делиться.");
         }
 
-        // 4. Проверяем, не пытается ли владелец поделиться сам с собой
         if (userToShareWith.getId().equals(ownerId)) {
             throw new ServiceException("Вы не можете поделиться кошельком с самим собой.");
         }
 
-        // 5. Добавляем пользователя в кошелек
         try {
             walletDao.addUserToWallet(userToShareWith.getId(), walletId);
         } catch (DaoException e) {
@@ -136,53 +125,37 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public void deleteExpense(long expenseId, long userId) throws ServiceException {
-        // 1. Находим расход по его ID.
-        // Optional защищает нас от NullPointerException.
         Expense expense = expenseDao.findById(expenseId)
                 .orElseThrow(() -> new ServiceException("Расход с ID " + expenseId + " не найден."));
-        // 2. Получаем ID кошелька, к которому принадлежит расход.
         long walletId = expense.getWalletId();
-        // 3. ПРОВЕРКА ПРАВ ДОСТУПА. Используем уже существующий метод.
-        // Это ключевой шаг для безопасности!
         if (!hasAccessToWallet(walletId, userId)) {
             throw new ServiceException("Доступ запрещен. У вас нет прав на удаление расходов в этом кошельке.");
         }
-        // 4. Если все проверки пройдены, удаляем расход.
         expenseDao.delete(expenseId);
     }
 
     @Override
     public boolean hasAccessToWallet(long walletId, long userId) {
-        // 1. Проверяем, не является ли пользователь владельцем
-        // Это самая частая операция, поэтому проверяем ее первой
         Optional<Long> ownerIdOpt = walletDao.findOwnerId(walletId);
         if (ownerIdOpt.isPresent() && ownerIdOpt.get() == userId) {
             return true;
         }
-        // 2. Если не владелец, проверяем, не расшарен ли ему кошелек
         return walletDao.isSharedWith(walletId, userId);
     }
 
     @Override
     public void updateExpense(Expense expenseUpdates, long userId) throws ServiceException {
-        // 1. Находим существующий расход в БД. Это источник "правды".
         Expense existingExpense = expenseDao.findById(expenseUpdates.getId())
                 .orElseThrow(() -> new ServiceException("Расход с ID " + expenseUpdates.getId() + " не найден."));
 
-        // 2. Проверяем права доступа.
         if (!hasAccessToWallet(existingExpense.getWalletId(), userId)) {
             throw new ServiceException("Доступ запрещен.");
         }
 
-        // 3. Обновляем поля существующего объекта данными из объекта-обновления.
         existingExpense.setAmount(expenseUpdates.getAmount());
         existingExpense.setDescription(expenseUpdates.getDescription());
         existingExpense.setCategoryId(expenseUpdates.getCategoryId());
 
-        // При желании можно обновить и дату
-        // existingExpense.setExpenseDate(LocalDateTime.now());
-
-        // 4. Сохраняем в БД уже полный, обновленный и безопасный объект.
         expenseDao.update(existingExpense);
     }
 
@@ -198,7 +171,28 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     public List<Category> getAllCategories() {
-        // Просто делегируем вызов в DAO
         return categoryDao.findAll();
+    }
+
+    @Override
+    public Wallet createWallet(String walletName, long userId) throws ServiceException {
+        if (walletName == null || walletName.trim().isEmpty()) {
+            throw new ServiceException("Название кошелька не может быть пустым.");
+        }
+
+        if (userDao.findById(userId).isEmpty()) {
+            throw new ServiceException("Пользователь не найден.");
+        }
+
+        Wallet wallet = Wallet.builder()
+                .name(walletName.trim())
+                .ownerId(userId)
+                .build();
+
+        try {
+            return walletDao.save(wallet);
+        } catch (DaoException e) {
+            throw new ServiceException("Не удалось создать кошелек.", e);
+        }
     }
 }

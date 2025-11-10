@@ -1,18 +1,18 @@
 package ru.itis.expensetracker.dao.impl;
 
-
 import ru.itis.expensetracker.dao.UserDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.util.DatabaseManager;
-
 import java.sql.*;
 import java.util.Optional;
 
 public class JdbcUserDao implements UserDao {
+
     private static final String SAVE_SQL = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
     private static final String FIND_BY_EMAIL_SQL = "SELECT id, username, email, password_hash FROM users WHERE email = ?";
     private static final String FIND_BY_ID_SQL = "SELECT id, username, email, password_hash FROM users WHERE id = ?";
+
     @Override
     public User save(User user) {
         try (Connection connection = DatabaseManager.getConnection();
@@ -36,6 +36,7 @@ public class JdbcUserDao implements UserDao {
             throw new DaoException("Error saving user: " + user.getEmail(), e);
         }
     }
+
     @Override
     public Optional<User> findByEmail(String email) {
         try (Connection connection = DatabaseManager.getConnection();
@@ -51,6 +52,7 @@ public class JdbcUserDao implements UserDao {
         }
         return Optional.empty();
     }
+
     @Override
     public Optional<User> findById(long id) {
         try (Connection connection = DatabaseManager.getConnection();
@@ -66,6 +68,7 @@ public class JdbcUserDao implements UserDao {
         }
         return Optional.empty();
     }
+
     private User mapRowToUser(ResultSet resultSet) throws SQLException {
         return User.builder()
                 .id(resultSet.getLong("id"))

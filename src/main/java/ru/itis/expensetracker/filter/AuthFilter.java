@@ -18,7 +18,7 @@ public class AuthFilter implements Filter {
         String uri = request.getRequestURI();
 
         // Разрешаем доступ к страницам логина, регистрации и статическим ресурсам (css, js)
-        if (uri.endsWith("/login") || uri.endsWith("/register") || uri.contains("/static/")) {
+        if (uri.endsWith("/login") || uri.endsWith("/register") || uri.endsWith(".css") || uri.endsWith(".js")) {
             chain.doFilter(request, response);
             return;
         }

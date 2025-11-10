@@ -1,7 +1,5 @@
 package ru.itis.expensetracker.controller.expenses;
 
-
-
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.model.Expense;
@@ -15,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @WebServlet("/expenses/edit")
@@ -32,8 +32,6 @@ public class UpdateExpenseServlet extends HttpServlet {
             long expenseId = Long.parseLong(req.getParameter("id"));
             User user = (User) req.getSession().getAttribute("user");
             Expense expense = walletService.getExpenseById(expenseId, user.getId());
-
-            // ИСПРАВЛЕНИЕ: используем категории, доступные пользователю
             List<Category> categories = walletService.getAvailableCategoriesForUser(user.getId());
 
             req.setAttribute("expense", expense);
@@ -45,30 +43,82 @@ public class UpdateExpenseServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String walletId = req.getParameter("walletId");
-
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
+            String walletIdParam = req.getParameter("walletId");
+            String expenseIdParam = req.getParameter("expenseId");
+            String amountParam = req.getParameter("amount");
+            String categoryIdParam = req.getParameter("categoryId");
+            String description = req.getParameter("description");
             User user = (User) req.getSession().getAttribute("user");
 
-            // ИСПОЛЬЗУЕМ BUILDER для создания объекта Expense
-            Expense expenseToUpdate = Expense.builder()
-                    .id(Long.parseLong(req.getParameter("expenseId")))
-                    .amount(new BigDecimal(req.getParameter("amount")))
-                    .description(req.getParameter("description"))
-                    .categoryId(Long.parseLong(req.getParameter("categoryId")))
-                    .build(); // Создаем объект
+            if (user == null) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Пользователь не авторизован.");
+                return;
+            }
 
-            // Важно: мы передаем в сервис только те поля, которые пользователь может менять.
-            // ID пользователя и кошелька сервис должен проверить и подставить сам для безопасности.
+            if (walletIdParam == null || walletIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID кошелька не указан.");
+                return;
+            }
+
+            if (expenseIdParam == null || expenseIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID расхода не указан.");
+                return;
+            }
+
+            if (amountParam == null || amountParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Сумма не может быть пустой.");
+                return;
+            }
+
+            if (categoryIdParam == null || categoryIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Категория не выбрана.");
+                return;
+            }
+
+            long walletId = Long.parseLong(walletIdParam);
+            long expenseId = Long.parseLong(expenseIdParam);
+            BigDecimal amount = new BigDecimal(amountParam);
+            long categoryId = Long.parseLong(categoryIdParam);
+
+            Expense expenseToUpdate = Expense.builder()
+                    .id(expenseId)
+                    .amount(amount)
+                    .description(description)
+                    .categoryId(categoryId)
+                    .build();
 
             walletService.updateExpense(expenseToUpdate, user.getId());
-
             resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId);
-
-        } catch (ServiceException | NumberFormatException | NullPointerException e) {
-            // Добавляем обработку NPE на случай невалидных данных с формы
-            resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId + "&error=UpdateFailed");
+        } catch (NumberFormatException e) {
+            String walletIdParam = req.getParameter("walletId");
+            if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
+                try {
+                    long walletId = Long.parseLong(walletIdParam);
+                    String errorMsg = URLEncoder.encode("Некорректные данные для обновления.", StandardCharsets.UTF_8);
+                    resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId + "&error=" + errorMsg);
+                } catch (NumberFormatException ex) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
+                }
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректные данные для обновления.");
+            }
+        } catch (ServiceException e) {
+            String walletIdParam = req.getParameter("walletId");
+            if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
+                try {
+                    long walletId = Long.parseLong(walletIdParam);
+                    String errorMsg = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+                    resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId + "&error=" + errorMsg);
+                } catch (NumberFormatException ex) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                }
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            }
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при обновлении расхода.");
         }
     }
 }

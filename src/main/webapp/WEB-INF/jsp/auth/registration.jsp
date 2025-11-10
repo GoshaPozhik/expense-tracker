@@ -10,11 +10,11 @@
 
                 <c:if test="${not empty requestScope.error}">
                     <div class="alert alert-danger" role="alert">
-                            ${requestScope.error}
+                        ${requestScope.error}
                     </div>
                 </c:if>
 
-                <form method="post" action="${pageContext.request.contextPath}/register" id="registrationForm">
+                <form method="post" action="<c:url value="/register"/>" id="registrationForm">
                     <div class="mb-3">
                         <label for="username" class="form-label">Имя пользователя</label>
                         <input type="text" class="form-control" id="username" name="username" required>
@@ -37,12 +37,11 @@
                     <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
                 </form>
                 <div class="text-center mt-3">
-                    <p>Уже есть аккаунт? <a href="${pageContext.request.contextPath}/login">Войти</a></p>
+                    <p>Уже есть аккаунт? <a href="<c:url value="/login"/>">Войти</a></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <%-- Подключаем наш JavaScript файл --%>
-    <script src="${pageContext.request.contextPath}/static/js/app.js"></script>
+    <script src="<c:url value="/js/app.js"/>"></script>
 </t:main>

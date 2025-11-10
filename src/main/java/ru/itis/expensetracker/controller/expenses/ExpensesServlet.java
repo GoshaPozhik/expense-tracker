@@ -1,13 +1,10 @@
 package ru.itis.expensetracker.controller.expenses;
 
-
-
 import ru.itis.expensetracker.dto.ExpenseDetailDto;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.service.WalletService;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -25,15 +22,28 @@ public class ExpensesServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            long walletId = Long.parseLong(req.getParameter("walletId"));
+            String walletIdParam = req.getParameter("walletId");
             User user = (User) req.getSession().getAttribute("user");
 
-            // TODO: Добавить в WalletService проверку, что пользователь имеет доступ к этому кошельку!
-            // Эта логика уже есть в WalletServiceImpl, так что мы в безопасности.
+            if (user == null) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Пользователь не авторизован.");
+                return;
+            }
 
-            // List<Expense> expenses = walletService.getExpensesForWallet(walletId);
+            if (walletIdParam == null || walletIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID кошелька не указан.");
+                return;
+            }
+
+            long walletId = Long.parseLong(walletIdParam);
+
+            if (!walletService.hasAccessToWallet(walletId, user.getId())) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "У вас нет доступа к этому кошельку.");
+                return;
+            }
+
             List<ExpenseDetailDto> expenses = walletService.getDetailedExpensesForWallet(walletId);
             List<Category> categories = walletService.getAvailableCategoriesForUser(user.getId());
 
@@ -41,10 +51,12 @@ public class ExpensesServlet extends HttpServlet {
             req.setAttribute("categories", categories);
             req.setAttribute("currentWalletId", walletId);
 
-            req.getRequestDispatcher("/WEB-INF/jsp/expenses.jsp").forward(req, resp);
+            req.getRequestDispatcher("/WEB-INF/jsp/expenses/list.jsp").forward(req, resp);
         } catch (NumberFormatException e) {
-            // Если ID кошелька невалидный
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при загрузке расходов.");
         }
     }
 }

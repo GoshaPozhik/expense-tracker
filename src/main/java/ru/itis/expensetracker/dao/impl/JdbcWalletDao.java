@@ -1,18 +1,16 @@
 package ru.itis.expensetracker.dao.impl;
 
-
 import ru.itis.expensetracker.dao.WalletDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Wallet;
 import ru.itis.expensetracker.util.DatabaseManager;
-
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class JdbcWalletDao implements WalletDao {
+
     private static final String SAVE_WALLET_SQL = "INSERT INTO wallets (name, owner_id) VALUES (?, ?)";
     private static final String ADD_USER_TO_WALLET_SQL = "INSERT INTO user_wallets (user_id, wallet_id) VALUES (?, ?)";
     private static final String FIND_BY_ID_SQL = "SELECT id, name, owner_id FROM wallets WHERE id = ?";
@@ -20,10 +18,10 @@ public class JdbcWalletDao implements WalletDao {
             "SELECT w.id, w.name, w.owner_id FROM wallets w " +
                     "JOIN user_wallets uw ON w.id = uw.wallet_id " +
                     "WHERE uw.user_id = ?";
+    private static final String IS_SHARED_WITH_SQL = "SELECT 1 FROM user_wallets WHERE wallet_id = ? AND user_id = ?";
+    private static final String FIND_OWNER_ID_SQL = "SELECT owner_id FROM wallets WHERE id = ?";
     private static final String UPDATE_SQL = "UPDATE wallets SET name = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM wallets WHERE id = ?";
-    private static final String IS_SHARED_WITH_SQL = "SELECT 1 FROM wallet_shares WHERE wallet_id = ? AND user_id = ?";
-    private static final String FIND_OWNER_ID_SQL = "SELECT owner_id FROM wallets WHERE id = ?";
 
     @Override
     public Wallet save(Wallet wallet) {

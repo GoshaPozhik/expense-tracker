@@ -22,10 +22,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public User register(String username, String email, String password) throws ServiceException {
+    public User register(String username, String email, String password, String confirmPassword) throws ServiceException {
         // 1. Проверка, что email не занят
         if (userDao.findByEmail(email).isPresent()) {
             throw new ServiceException("Пользователь с email '" + email + "' уже существует.");
+        }
+        if (!password.equals(confirmPassword)) {
+            throw new ServiceException("Пароли не совпадают.");
         }
 
         // 2. Хеширование пароля

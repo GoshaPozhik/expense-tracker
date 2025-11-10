@@ -1,332 +1,398 @@
-/* --- Подключение шрифта --- */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 
-/* --- Общие переменные и стили --- */
 :root {
-    --primary-color: #0d6efd;
-    --dark-color: #212529;
-    --light-gray: #f8f9fa;
-    --border-radius: 0.5rem;
-    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --pastel-cream: #FFF8F0;
+    --pastel-pink: #FFE5E5;
+    --pastel-lavender: #E8E0FF;
+    --pastel-mint: #E0F5E8;
+    --pastel-peach: #FFE8D6;
+    --pastel-blue: #E0F0FF;
+    --pastel-lilac: #F0E8FF;
+    
+    --text-soft: #6B7280;
+    --text-dark: #374151;
+    --text-light: #9CA3AF;
+    
+    --border-soft: #E5E7EB;
+    --border-light: #F3F4F6;
+    
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.06);
+    
+    --radius: 12px;
+    --radius-small: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    font-family: 'Montserrat', sans-serif;
-    background-color: var(--light-gray);
-    display: flex;
-    flex-direction: column;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, var(--pastel-cream) 0%, var(--pastel-blue) 100%);
     min-height: 100vh;
-    color: #333;
+    color: var(--text-dark);
+    line-height: 1.6;
+    padding-top: 70px;
 }
 
 main {
-    flex: 1;
+    min-height: calc(100vh - 70px);
+    padding-bottom: 60px;
 }
 
-/* --- Навигационная панель --- */
 .navbar {
-    box-shadow: var(--box-shadow);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 1rem 0;
+    box-shadow: var(--shadow-soft);
 }
 
-/* --- Карточки для форм (логин, регистрация) --- */
-.auth-card {
-    background-color: white;
-    padding: 2.5rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    margin-top: 2rem;
-}
-
-/* --- Кнопки --- */
-.btn {
-    border-radius: var(--border-radius);
-    padding: 0.75rem 1.25rem;
+.navbar-brand {
+    color: var(--text-dark);
     font-weight: 500;
-    transition: all 0.2s ease-in-out;
+    font-size: 1.25rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+.navbar-brand:hover {
+    color: var(--text-soft);
 }
 
-/* --- Формы --- */
-.form-control, .form-select {
-    border-radius: var(--border-radius);
-    padding: 0.75rem;
-}
-
-.form-control:focus, .form-select:focus {
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    border-color: var(--primary-color);
-}
-
-/* --- Списки (кошельки, расходы) --- */
-.list-group-item {
-    border-radius: var(--border-radius);
-    margin-bottom: 0.75rem;
-    border: 1px solid #ddd;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-}
-
-.list-group-item:hover {
-    transform: translateX(5px);
-    box-shadow: var(--box-shadow);
-    border-left: 4px solid var(--primary-color);
-}
-
-.table {
-    background-color: white;
-    border-radius: var(--border-radius);
-    overflow: hidden; /* чтобы скругление работало */
-    box-shadow: var(--box-shadow);
-}
-
-/* Подключаем переменные для удобного управления цветами */
-:root {
-    --navbar-bg-color: rgba(10, 10, 20, 0.5); /* Полупрозрачный темно-синий */
-    --navbar-blur: 10px;
-    --navbar-border-color: rgba(255, 255, 255, 0.2);
-    --navbar-text-color: #f0f0f0;
-    --navbar-brand-color: #ffffff;
-    --navbar-hover-glow: #00aaff;
-    --auth-button-bg: linear-gradient(90deg, #00aaff, #0077ff);
-    --auth-button-hover-bg: linear-gradient(90deg, #0077ff, #0055cc);
-}
-
-/* Применяем шрифт ко всему, для консистентности */
-body {
-    font-family: 'Montserrat', sans-serif;
-}
-
-.custom-navbar-glass {
-    background: var(--navbar-bg-color);
-    backdrop-filter: blur(var(--navbar-blur));
-    -webkit-backdrop-filter: blur(var(--navbar-blur)); /* Для поддержки Safari */
-    border-bottom: 1px solid var(--navbar-border-color);
-    transition: background 0.3s ease;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-}
-
-.custom-navbar-glass .navbar-brand {
-    color: var(--navbar-brand-color);
-    font-weight: 700;
-    font-size: 1.5rem;
-    text-shadow: 0 0 10px rgba(0, 170, 255, 0.5); /* Легкое неоновое свечение */
-    transition: all 0.3s ease;
-}
-
-.custom-navbar-glass .navbar-brand:hover {
-    color: var(--navbar-brand-color);
-    text-shadow: 0 0 15px var(--navbar-hover-glow);
-}
-
-.custom-navbar-glass .nav-link {
-    color: var(--navbar-text-color);
-    font-weight: 500;
-    position: relative;
+.nav-link {
+    color: var(--text-soft);
+    font-weight: 400;
     padding: 0.5rem 1rem;
-    margin: 0 0.25rem;
-    transition: color 0.3s ease;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    border-radius: var(--radius-small);
 }
 
-/* Анимация подчеркивания при наведении */
-.custom-navbar-glass .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background-color: var(--navbar-hover-glow);
-    transition: width 0.4s ease;
-    box-shadow: 0 0 8px var(--navbar-hover-glow);
+.nav-link:hover {
+    color: var(--text-dark);
+    background: var(--pastel-lavender);
 }
 
-.custom-navbar-glass .nav-link:hover {
-    color: #ffffff;
+.welcome-text {
+    color: var(--text-soft);
+    font-size: 0.9rem;
 }
 
-.custom-navbar-glass .nav-link:hover::after {
-    width: 70%;
-}
+/*. // auth-button {*/
+/*    background: var(--pastel-lavender);*/
+/*    color: var(--text-dark);*/
+/*    border-radius: var(--radius-small);*/
+/*    padding: 0.5rem 1.25rem;*/
+/*    transition: all 0.2s ease;*/
+/*}*/
 
-.custom-navbar-glass .welcome-text {
-    color: var(--navbar-text-color);
-    opacity: 0.8;
-    font-style: italic;
-}
+/* .auth-button:hover {*/
+/*    background: var(--pastel-lilac);*/
+/*    color: var(--text-dark);*/
+/*}*/
 
-/* Особый стиль для кнопки "Регистрация" */
-.custom-navbar-glass .auth-button {
-    background: var(--auth-button-bg);
-    color: #fff !important;
-    border-radius: 50px; /* Делаем ее "таблеткой" */
-    padding: 0.5rem 1.5rem !important;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
-}
-
-.custom-navbar-glass .auth-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.5);
-    background: var(--auth-button-hover-bg);
-}
-
-.custom-navbar-glass .auth-button::after {
-    display: none; /* Убираем эффект подчеркивания для кнопки */
-}
-
-/* Стили для иконки гамбургера на мобильных устройствах */
 .navbar-toggler {
-    border-color: var(--navbar-border-color);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-small);
 }
+
 .navbar-toggler-icon {
-    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
 }
 
-/* /css/main.css */
-
-/* --- 1. Глобальные переменные и настройки --- */
-:root {
-    --bg-url: url('https://images.unsplash.com/photo-1554034483-263b1b365863?q=80&w=1925&auto=format&fit=crop'); /* Ссылка на красивый фон */
-    --glass-bg-color: rgba(15, 20, 40, 0.65); /* Цвет стекла */
-    --glass-blur: 12px; /* Интенсивность размытия */
-    --border-color: rgba(255, 255, 255, 0.2);
-    --text-color: #e0e5f0;
-    --title-color: #ffffff;
-    --primary-glow-color: #00aaff;
-    --primary-gradient: linear-gradient(90deg, #00aaff, #0077ff);
-    --primary-gradient-hover: linear-gradient(90deg, #0077ff, #0055cc);
+.auth-card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-soft);
+    max-width: 500px;
+    margin: 2rem auto;
 }
 
-body {
-    font-family: 'Montserrat', sans-serif;
-    background: var(--bg-url) no-repeat center center fixed;
-    background-size: cover;
-    color: var(--text-color);
-    padding-top: 80px; /* Отступ для фиксированной навигации */
-}
-
-.main-content {
-    min-height: calc(100vh - 80px - 60px); /* Высота экрана минус навбар и футер */
-    padding-top: 40px;
-    padding-bottom: 40px;
-}
-
-/* --- 2. Стили для "стеклянных" контейнеров --- */
-.glass-container {
-    background: var(--glass-bg-color);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-radius: 15px;
-    border: 1px solid var(--border-color);
-    padding: 2rem 2.5rem;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-/* --- 3. Типографика --- */
 h1, h2, h3, h4, h5, h6 {
-    color: var(--title-color);
-    font-weight: 700;
-    text-shadow: 0 0 8px rgba(0,0,0,0.5);
-}
-
-/* --- 4. Стили для форм (логин, регистрация, добавление расхода) --- */
-.form-label {
+    color: var(--text-dark);
     font-weight: 500;
-    color: var(--text-color);
+    margin-bottom: 1rem;
 }
 
-.form-control {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid var(--border-color);
-    color: #fff;
-    border-radius: 8px;
-    padding: 0.8rem 1rem;
-    transition: all 0.3s ease;
+h1 {
+    font-size: 2rem;
+    font-weight: 600;
 }
 
-.form-control:focus {
-    background: rgba(0, 0, 0, 0.3);
-    color: #fff;
-    border-color: var(--primary-glow-color);
-    box-shadow: 0 0 10px var(--primary-glow-color);
+h2 {
+    font-size: 1.5rem;
+}
+
+.btn {
+    border-radius: var(--radius-small);
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--pastel-lavender);
+    color: var(--text-dark);
+}
+
+.btn-primary:hover {
+    background: var(--pastel-lilac);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-success {
+    background: var(--pastel-mint);
+    color: var(--text-dark);
+}
+
+.btn-success:hover {
+    background: #D4F4E0;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-info {
+    background: var(--pastel-blue);
+    color: var(--text-dark);
+}
+
+.btn-info:hover {
+    background: #C8E8FF;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-warning {
+    background: var(--pastel-peach);
+    color: var(--text-dark);
+}
+
+.btn-warning:hover {
+    background: #FFDCC0;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-danger {
+    background: var(--pastel-pink);
+    color: var(--text-dark);
+}
+
+.btn-danger:hover {
+    background: #FFD0D0;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-secondary {
+    background: var(--border-light);
+    color: var(--text-soft);
+}
+
+.btn-secondary:hover {
+    background: var(--border-soft);
+    color: var(--text-dark);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.form-label {
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-small);
+    padding: 0.75rem 1rem;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--pastel-lavender);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 3px rgba(232, 224, 255, 0.3);
 }
 
 .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-light);
 }
 
-.form-select {
-    /* Наследует стили от .form-control */
+.list-group-item {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-small);
+    margin-bottom: 0.75rem;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-soft);
+    text-decoration: none;
+    color: var(--text-dark);
 }
 
-/* --- 5. Стили для кнопок --- */
-.btn-glow {
-    background: var(--primary-gradient);
-    color: #fff;
-    border: none;
-    border-radius: 50px;
-    padding: 0.75rem 2rem;
-    font-weight: 700;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.list-group-item:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: var(--pastel-lavender);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+    text-decoration: none;
+    color: var(--text-dark);
 }
 
-.btn-glow:hover {
-    color: #fff;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.5);
-    background: var(--primary-gradient-hover);
+.table {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-soft);
 }
 
-/* --- 6. Стили для таблиц (список расходов) --- */
-.table-glass {
-    background: transparent; /* Таблица сама по себе прозрачна */
-    color: var(--text-color);
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.table-glass th,
-.table-glass td {
-    background: rgba(0,0,0,0.1);
-    border-bottom: 1px solid var(--border-color);
+.table thead th {
+    background: var(--pastel-cream);
+    color: var(--text-dark);
+    font-weight: 500;
     padding: 1rem;
+    border-bottom: 2px solid var(--border-soft);
 }
 
-.table-glass thead th {
-    color: var(--title-color);
-    font-weight: 700;
-    background: rgba(0,0,0,0.3);
+.table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-soft);
 }
 
-.table-glass tbody tr {
-    transition: background-color 0.3s ease;
+.table tbody tr:hover {
+    background: var(--pastel-cream);
 }
 
-.table-glass tbody tr:hover {
-    background-color: rgba(0, 170, 255, 0.15); /* Подсветка строки при наведении */
+.table-info {
+    background: var(--pastel-lavender) !important;
 }
 
-/* --- 7. Вспомогательные стили --- */
-.footer-text {
-    color: rgba(255,255,255,0.6);
-    backdrop-filter: blur(2px);
+.table-info td {
+    color: var(--text-dark);
+    font-weight: 600;
 }
 
-/* Добавьте сюда стили для .custom-navbar-glass из предыдущего ответа */
-/* ... ваш CSS для navbar ... */
+.badge {
+    background: var(--pastel-lavender);
+    color: var(--text-dark);
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-small);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
 
-/* --- Футер --- */
+.alert {
+    border-radius: var(--radius-small);
+    padding: 1rem 1.25rem;
+    border: 1px solid;
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background: var(--pastel-mint);
+    border-color: #C8E8D8;
+    color: var(--text-dark);
+}
+
+.alert-danger {
+    background: var(--pastel-pink);
+    border-color: #FFD0D0;
+    color: var(--text-dark);
+}
+
+.modal-content {
+    border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-medium);
+}
+
+.modal-header {
+    background: var(--pastel-cream);
+    border-bottom: 1px solid var(--border-soft);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-title {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.modal-footer {
+    background: var(--pastel-cream);
+    border-top: 1px solid var(--border-soft);
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 1rem 1.5rem;
+}
+
 .footer {
-    flex-shrink: 0;
-    background-color: #fff !important; /* переопределяем Bootstrap */
-    border-top: 1px solid #eee;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border-soft);
+    padding: 1.5rem 0;
+    margin-top: auto;
+}
+
+.footer .text-muted {
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.text-muted {
+    color: var(--text-light);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.d-inline {
+    display: inline;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 60px;
+    }
+    
+    .auth-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
 }

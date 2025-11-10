@@ -27,6 +27,6 @@ public class HomeServlet extends HttpServlet {
         List<Wallet> wallets = walletService.getWalletsForUser(user.getId());
 
         req.setAttribute("wallets", wallets);
-        req.getRequestDispatcher("/WEB-INF/jsp/home.jsp").forward(req, resp);
+        req.getRequestDispatcher("/WEB-INF/jsp/wallets/list.jsp").forward(req, resp);
     }
 }

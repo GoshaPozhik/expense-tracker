@@ -4,13 +4,14 @@ import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.service.WalletService;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/expenses/add")
 public class AddExpenseServlet extends HttpServlet {
@@ -22,31 +23,68 @@ public class AddExpenseServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            // 1. Получаем данные из формы
-            BigDecimal amount = new BigDecimal(req.getParameter("amount"));
+            String amountParam = req.getParameter("amount");
             String description = req.getParameter("description");
-            long categoryId = Long.parseLong(req.getParameter("categoryId"));
-            long walletId = Long.parseLong(req.getParameter("walletId"));
+            String categoryIdParam = req.getParameter("categoryId");
+            String walletIdParam = req.getParameter("walletId");
             User user = (User) req.getSession().getAttribute("user");
 
-            // 2. Вызываем сервис
+            if (user == null) {
+                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Пользователь не авторизован.");
+                return;
+            }
+
+            if (amountParam == null || amountParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Сумма не может быть пустой.");
+                return;
+            }
+
+            if (categoryIdParam == null || categoryIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Категория не выбрана.");
+                return;
+            }
+
+            if (walletIdParam == null || walletIdParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Кошелек не выбран.");
+                return;
+            }
+
+            BigDecimal amount = new BigDecimal(amountParam);
+            long categoryId = Long.parseLong(categoryIdParam);
+            long walletId = Long.parseLong(walletIdParam);
+
             walletService.addExpense(amount, description, user.getId(), walletId, categoryId);
-
-            // 3. Post-Redirect-Get (PRG) паттерн: перенаправляем, чтобы избежать повторной отправки формы
             resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId);
-
         } catch (NumberFormatException e) {
-            // Если данные некорректны
-            req.setAttribute("error", "Сумма, категория или кошелек указаны неверно.");
-            // Перенаправляем обратно на страницу с расходами, но с ошибкой
-            // Лучше было бы сохранить введенные данные, чтобы пользователю не пришлось вводить их заново
-            resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + req.getParameter("walletId") + "&error=invalid_data");
+            String walletIdParam = req.getParameter("walletId");
+            if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
+                try {
+                    long walletId = Long.parseLong(walletIdParam);
+                    String errorMsg = URLEncoder.encode("Сумма, категория или кошелек указаны неверно.", StandardCharsets.UTF_8);
+                    resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId + "&error=" + errorMsg);
+                } catch (NumberFormatException ex) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
+                }
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Сумма, категория или кошелек указаны неверно.");
+            }
         } catch (ServiceException e) {
-            // Если бизнес-логика не прошла (например, нет доступа)
-            req.setAttribute("error", e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + req.getParameter("walletId") + "&error=" + e.getMessage());
+            String walletIdParam = req.getParameter("walletId");
+            if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
+                try {
+                    long walletId = Long.parseLong(walletIdParam);
+                    String errorMsg = URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8);
+                    resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId + "&error=" + errorMsg);
+                } catch (NumberFormatException ex) {
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                }
+            } else {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            }
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при добавлении расхода.");
         }
     }
 }
