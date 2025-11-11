@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.controller.expenses;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.model.Expense;
@@ -19,6 +21,7 @@ import java.util.List;
 
 @WebServlet("/expenses/edit")
 public class UpdateExpenseServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(UpdateExpenseServlet.class);
     private WalletService walletService;
 
     @Override
@@ -36,8 +39,13 @@ public class UpdateExpenseServlet extends HttpServlet {
 
             req.setAttribute("expense", expense);
             req.setAttribute("categories", categories);
+            logger.debug("Loading expense {} for edit by user {}", expenseId, user.getId());
             req.getRequestDispatcher("/WEB-INF/jsp/expenses/edit.jsp").forward(req, resp);
-        } catch (NumberFormatException | ServiceException e) {
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid expense ID format: {}", req.getParameter("id"));
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID расхода.");
+        } catch (ServiceException e) {
+            logger.warn("Error loading expense for edit: {}", e.getMessage());
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         }
     }
@@ -90,6 +98,7 @@ public class UpdateExpenseServlet extends HttpServlet {
                     .build();
 
             walletService.updateExpense(expenseToUpdate, user.getId());
+            logger.info("Expense updated: expenseId={}, walletId={}, userId={}", expenseId, walletId, user.getId());
             resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId);
         } catch (NumberFormatException e) {
             String walletIdParam = req.getParameter("walletId");
@@ -105,6 +114,7 @@ public class UpdateExpenseServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректные данные для обновления.");
             }
         } catch (ServiceException e) {
+            logger.warn("Error updating expense: {}", e.getMessage());
             String walletIdParam = req.getParameter("walletId");
             if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
                 try {
@@ -118,6 +128,7 @@ public class UpdateExpenseServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             }
         } catch (Exception e) {
+            logger.error("Unexpected error updating expense", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при обновлении расхода.");
         }
     }

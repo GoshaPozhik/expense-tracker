@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.dao.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.dao.ExpenseDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Expense;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class JdbcExpenseDao implements ExpenseDao {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcExpenseDao.class);
 
     private static final String SAVE_SQL = "INSERT INTO expenses (amount, description, expense_date, user_id, wallet_id, category_id) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String FIND_BY_WALLET_SQL = "SELECT id, amount, description, expense_date, user_id, wallet_id, category_id FROM expenses WHERE wallet_id = ? ORDER BY expense_date DESC";
@@ -32,11 +35,13 @@ public class JdbcExpenseDao implements ExpenseDao {
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
                     expense.setId(keys.getLong(1));
+                    logger.debug("Expense saved with ID: {}, walletId: {}", expense.getId(), expense.getWalletId());
                     return expense;
                 }
             }
             throw new DaoException("Failed to save expense, no ID obtained.", null);
         } catch (SQLException e) {
+            logger.error("Error saving expense", e);
             throw new DaoException("Error saving expense", e);
         }
     }
@@ -53,8 +58,10 @@ public class JdbcExpenseDao implements ExpenseDao {
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding expenses for wallet {}", walletId, e);
             throw new DaoException("Error finding expenses for wallet " + walletId, e);
         }
+        logger.debug("Found {} expenses for wallet {}", expenses.size(), walletId);
         return expenses;
     }
 
@@ -65,10 +72,12 @@ public class JdbcExpenseDao implements ExpenseDao {
             statement.setLong(1, id);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
+                    logger.debug("Expense found by ID: {}", id);
                     return Optional.of(mapRowToExpense(rs));
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding expense by id {}", id, e);
             throw new DaoException("Error finding expense by id " + id, e);
         }
         return Optional.empty();
@@ -83,8 +92,10 @@ public class JdbcExpenseDao implements ExpenseDao {
             statement.setLong(3, expense.getCategoryId());
             statement.setTimestamp(4, Timestamp.valueOf(expense.getExpenseDate()));
             statement.setLong(5, expense.getId());
-            statement.executeUpdate();
+            int updated = statement.executeUpdate();
+            logger.debug("Expense updated: id={}, rows affected={}", expense.getId(), updated);
         } catch (SQLException e) {
+            logger.error("Error updating expense with id {}", expense.getId(), e);
             throw new DaoException("Error updating expense with id " + expense.getId(), e);
         }
     }
@@ -94,8 +105,10 @@ public class JdbcExpenseDao implements ExpenseDao {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setLong(1, id);
-            statement.executeUpdate();
+            int deleted = statement.executeUpdate();
+            logger.debug("Expense deleted: id={}, rows affected={}", id, deleted);
         } catch (SQLException e) {
+            logger.error("Error deleting expense with id {}", id, e);
             throw new DaoException("Error deleting expense with id " + id, e);
         }
     }

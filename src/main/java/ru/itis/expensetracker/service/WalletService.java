@@ -22,4 +22,7 @@ public interface WalletService {
     Expense getExpenseById(long expenseId, long userId) throws ServiceException;
     List<Category> getAllCategories();
     Wallet createWallet(String walletName, long userId) throws ServiceException;
+    Wallet getWalletById(long walletId, long userId) throws ServiceException;
+    void updateWallet(long walletId, String walletName, long userId) throws ServiceException;
+    void deleteWallet(long walletId, long userId) throws ServiceException;
 }

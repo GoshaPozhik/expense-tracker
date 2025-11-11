@@ -21,7 +21,7 @@
     </c:if>
     <c:if test="${not empty param.share_error}">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            Ошибка: ${param.share_error}
+            Ошибка: <c:out value="${param.share_error}"/>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </c:if>
@@ -44,12 +44,13 @@
                         <tr>
                             <td>${expense.formattedDate}</td>
                             <td><fmt:formatNumber value="${expense.amount}" type="currency" currencySymbol="₽"/></td>
-                            <td><span class="badge">${expense.categoryName}</span></td>
-                            <td>${expense.description}</td>
-                            <td>${expense.userName}</td>
+                            <td><span class="badge"><c:out value="${expense.categoryName}"/></span></td>
+                            <td><c:out value="${expense.description}"/></td>
+                            <td><c:out value="${expense.userName}"/></td>
                             <td>
                                 <a href="<c:url value="/expenses/edit"><c:param name="id" value="${expense.id}"/></c:url>" class="btn btn-warning btn-sm me-1">Ред.</a>
                                 <form method="post" action="<c:url value="/expenses/delete"/>" class="d-inline">
+                                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                                     <input type="hidden" name="expenseId" value="${expense.id}">
                                     <input type="hidden" name="walletId" value="${currentWalletId}">
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены?');">Удалить</button>

@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.controller.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.service.AuthService;
 
@@ -12,6 +14,7 @@ import java.io.IOException;
 
 @WebServlet("/register")
 public class RegistrationServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(RegistrationServlet.class);
     private AuthService authService;
 
     @Override
@@ -26,42 +29,31 @@ public class RegistrationServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String email = null;
         try {
             String username = req.getParameter("username");
-            String email = req.getParameter("email");
+            email = req.getParameter("email");
             String password = req.getParameter("password");
             String confirmPassword = req.getParameter("confirmPassword");
 
-            if (username == null || username.trim().isEmpty()) {
-                req.setAttribute("error", "Имя пользователя не может быть пустым.");
+            // Базовая проверка на null (детальная валидация в сервисе)
+            if (username == null || email == null || password == null || confirmPassword == null) {
+                req.setAttribute("error", "Все поля обязательны для заполнения.");
                 req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
                 return;
             }
 
-            if (email == null || email.trim().isEmpty()) {
-                req.setAttribute("error", "Email не может быть пустым.");
-                req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
-                return;
-            }
-
-            if (password == null || password.trim().isEmpty()) {
-                req.setAttribute("error", "Пароль не может быть пустым.");
-                req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
-                return;
-            }
-
-            if (confirmPassword == null || confirmPassword.trim().isEmpty()) {
-                req.setAttribute("error", "Подтверждение пароля не может быть пустым.");
-                req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
-                return;
-            }
-
-            authService.register(username.trim(), email.trim(), password, confirmPassword);
+            String emailTrimmed = email.trim();
+            authService.register(username.trim(), emailTrimmed, password, confirmPassword);
+            logger.info("User registration successful: {}", emailTrimmed);
             resp.sendRedirect(req.getContextPath() + "/login");
         } catch (ServiceException e) {
+            String emailValue = email != null ? email : "unknown";
+            logger.warn("Registration failed for email {}: {}", emailValue, e.getMessage());
             req.setAttribute("error", e.getMessage());
             req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
         } catch (Exception e) {
+            logger.error("Unexpected error during registration", e);
             req.setAttribute("error", "Произошла ошибка при регистрации. Попробуйте позже.");
             req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
         }

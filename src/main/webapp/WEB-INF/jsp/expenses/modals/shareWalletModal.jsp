@@ -5,6 +5,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="<c:url value="/wallets/share"/>">
+                <input type="hidden" name="csrfToken" value="${csrfToken}">
                 <input type="hidden" name="walletId" value="${currentWalletId}">
                 <div class="modal-header">
                     <h5 class="modal-title">Поделиться кошельком</h5>

@@ -12,6 +12,8 @@ import ru.itis.expensetracker.model.Expense;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.model.Wallet;
 import ru.itis.expensetracker.service.WalletService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class WalletServiceImpl implements WalletService {
+    private static final Logger logger = LoggerFactory.getLogger(WalletServiceImpl.class);
 
     private final WalletDao walletDao;
     private final ExpenseDao expenseDao;
@@ -94,8 +97,12 @@ public class WalletServiceImpl implements WalletService {
                 .categoryId(categoryId)
                 .build();
         try {
-            return expenseDao.save(expense);
+            Expense saved = expenseDao.save(expense);
+            logger.debug("Expense added: id={}, amount={}, walletId={}, userId={}", 
+                    saved.getId(), amount, walletId, userId);
+            return saved;
         } catch (DaoException e) {
+            logger.error("Error adding expense", e);
             throw new ServiceException("Не удалось добавить расход.", e);
         }
     }
@@ -118,7 +125,10 @@ public class WalletServiceImpl implements WalletService {
 
         try {
             walletDao.addUserToWallet(userToShareWith.getId(), walletId);
+            logger.debug("Wallet shared: walletId={}, ownerId={}, sharedWithUserId={}", 
+                    walletId, ownerId, userToShareWith.getId());
         } catch (DaoException e) {
+            logger.error("Error sharing wallet", e);
             throw new ServiceException("Не удалось предоставить доступ к кошельку.", e);
         }
     }
@@ -129,9 +139,12 @@ public class WalletServiceImpl implements WalletService {
                 .orElseThrow(() -> new ServiceException("Расход с ID " + expenseId + " не найден."));
         long walletId = expense.getWalletId();
         if (!hasAccessToWallet(walletId, userId)) {
+            logger.warn("Access denied for expense deletion: expenseId={}, userId={}, walletId={}", 
+                    expenseId, userId, walletId);
             throw new ServiceException("Доступ запрещен. У вас нет прав на удаление расходов в этом кошельке.");
         }
         expenseDao.delete(expenseId);
+        logger.debug("Expense deleted: expenseId={}, walletId={}, userId={}", expenseId, walletId, userId);
     }
 
     @Override
@@ -157,6 +170,8 @@ public class WalletServiceImpl implements WalletService {
         existingExpense.setCategoryId(expenseUpdates.getCategoryId());
 
         expenseDao.update(existingExpense);
+        logger.debug("Expense updated: expenseId={}, walletId={}, userId={}", 
+                existingExpense.getId(), existingExpense.getWalletId(), userId);
     }
 
     @Override
@@ -190,9 +205,75 @@ public class WalletServiceImpl implements WalletService {
                 .build();
 
         try {
-            return walletDao.save(wallet);
+            Wallet saved = walletDao.save(wallet);
+            logger.debug("Wallet created: id={}, name={}, ownerId={}", 
+                    saved.getId(), saved.getName(), saved.getOwnerId());
+            return saved;
         } catch (DaoException e) {
+            logger.error("Error creating wallet", e);
             throw new ServiceException("Не удалось создать кошелек.", e);
+        }
+    }
+
+    @Override
+    public Wallet getWalletById(long walletId, long userId) throws ServiceException {
+        Wallet wallet = walletDao.findById(walletId)
+                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
+
+        if (!hasAccessToWallet(walletId, userId)) {
+            throw new ServiceException("Доступ к кошельку запрещен.");
+        }
+
+        return wallet;
+    }
+
+    @Override
+    public void updateWallet(long walletId, String walletName, long userId) throws ServiceException {
+        Wallet wallet = walletDao.findById(walletId)
+                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
+
+        // Только владелец может редактировать кошелек
+        if (!wallet.getOwnerId().equals(userId)) {
+            throw new ServiceException("Только владелец может редактировать кошелек.");
+        }
+
+        if (walletName == null || walletName.trim().isEmpty()) {
+            throw new ServiceException("Название кошелька не может быть пустым.");
+        }
+
+        String trimmedName = walletName.trim();
+        if (trimmedName.length() > 100) {
+            throw new ServiceException("Название кошелька не может превышать 100 символов.");
+        }
+
+        wallet.setName(trimmedName);
+
+        try {
+            walletDao.update(wallet);
+            logger.info("Wallet updated: {} by user: {}", walletId, userId);
+        } catch (DaoException e) {
+            logger.error("Error updating wallet: {}", walletId, e);
+            throw new ServiceException("Не удалось обновить кошелек.", e);
+        }
+    }
+
+    @Override
+    public void deleteWallet(long walletId, long userId) throws ServiceException {
+        Wallet wallet = walletDao.findById(walletId)
+                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
+
+        // Только владелец может удалить кошелек
+        if (!wallet.getOwnerId().equals(userId)) {
+            throw new ServiceException("Только владелец может удалить кошелек.");
+        }
+
+        try {
+            // Удаление кошелька автоматически удалит все связанные расходы (CASCADE)
+            walletDao.delete(walletId);
+            logger.info("Wallet deleted: {} by user: {}", walletId, userId);
+        } catch (DaoException e) {
+            logger.error("Error deleting wallet: {}", walletId, e);
+            throw new ServiceException("Не удалось удалить кошелек.", e);
         }
     }
 }

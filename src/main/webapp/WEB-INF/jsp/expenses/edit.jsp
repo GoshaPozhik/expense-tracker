@@ -9,11 +9,12 @@
             <div class="auth-card">
                 <c:if test="${not empty requestScope.error}">
                     <div class="alert alert-danger" role="alert">
-                        ${requestScope.error}
+                        <c:out value="${requestScope.error}"/>
                     </div>
                 </c:if>
 
                 <form method="post" action="<c:url value="/expenses/edit"/>">
+                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <input type="hidden" name="expenseId" value="${expense.id}">
                     <input type="hidden" name="walletId" value="${expense.walletId}">
 

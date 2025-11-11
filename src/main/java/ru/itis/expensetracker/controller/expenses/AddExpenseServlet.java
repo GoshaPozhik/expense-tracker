@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.controller.expenses;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.service.WalletService;
@@ -15,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 
 @WebServlet("/expenses/add")
 public class AddExpenseServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(AddExpenseServlet.class);
     private WalletService walletService;
 
     @Override
@@ -56,6 +59,7 @@ public class AddExpenseServlet extends HttpServlet {
             long walletId = Long.parseLong(walletIdParam);
 
             walletService.addExpense(amount, description, user.getId(), walletId, categoryId);
+            logger.info("Expense added: amount={}, walletId={}, userId={}", amount, walletId, user.getId());
             resp.sendRedirect(req.getContextPath() + "/expenses?walletId=" + walletId);
         } catch (NumberFormatException e) {
             String walletIdParam = req.getParameter("walletId");
@@ -71,6 +75,7 @@ public class AddExpenseServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Сумма, категория или кошелек указаны неверно.");
             }
         } catch (ServiceException e) {
+            logger.warn("Error adding expense: {}", e.getMessage());
             String walletIdParam = req.getParameter("walletId");
             if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
                 try {
@@ -84,6 +89,7 @@ public class AddExpenseServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             }
         } catch (Exception e) {
+            logger.error("Unexpected error adding expense", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при добавлении расхода.");
         }
     }

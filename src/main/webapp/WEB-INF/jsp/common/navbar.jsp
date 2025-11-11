@@ -15,8 +15,14 @@
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
                 <c:if test="${not empty sessionScope.user}">
                     <li class="nav-item">
-                        <span class="navbar-text welcome-text me-3">
-                            Hello, ${sessionScope.user.username}!
+                        <a class="nav-link" href="<c:url value="/home"/>">Wallets</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<c:url value="/categories"/>">Categories</a>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            Hello, <c:out value="${sessionScope.user.username}"/>!
                         </span>
                     </li>
                     <li class="nav-item">

@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.dao.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.dao.UserDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.User;
@@ -8,6 +10,7 @@ import java.sql.*;
 import java.util.Optional;
 
 public class JdbcUserDao implements UserDao {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcUserDao.class);
 
     private static final String SAVE_SQL = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
     private static final String FIND_BY_EMAIL_SQL = "SELECT id, username, email, password_hash FROM users WHERE email = ?";
@@ -27,12 +30,14 @@ public class JdbcUserDao implements UserDao {
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     user.setId(generatedKeys.getLong(1));
+                    logger.debug("User saved with ID: {}", user.getId());
                     return user;
                 } else {
                     throw new DaoException("Creating user failed, no ID obtained.", null);
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error saving user: {}", user.getEmail(), e);
             throw new DaoException("Error saving user: " + user.getEmail(), e);
         }
     }
@@ -44,10 +49,12 @@ public class JdbcUserDao implements UserDao {
             statement.setString(1, email);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
+                    logger.debug("User found by email: {}", email);
                     return Optional.of(mapRowToUser(resultSet));
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding user by email: {}", email, e);
             throw new DaoException("Error finding user by email: " + email, e);
         }
         return Optional.empty();
@@ -60,10 +67,12 @@ public class JdbcUserDao implements UserDao {
             statement.setLong(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
+                    logger.debug("User found by ID: {}", id);
                     return Optional.of(mapRowToUser(resultSet));
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding user by id: {}", id, e);
             throw new DaoException("Error finding user by id: " + id, e);
         }
         return Optional.empty();

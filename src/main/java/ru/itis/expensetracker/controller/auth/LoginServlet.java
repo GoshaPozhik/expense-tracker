@@ -1,7 +1,10 @@
 package ru.itis.expensetracker.controller.auth;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.service.AuthService;
+import ru.itis.expensetracker.util.CookieUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,6 +17,7 @@ import java.util.Optional;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(LoginServlet.class);
     private AuthService authService;
 
     @Override
@@ -47,8 +51,17 @@ public class LoginServlet extends HttpServlet {
             Optional<User> userOptional = authService.login(email.trim(), password);
 
             if (userOptional.isPresent()) {
+                User user = userOptional.get();
                 HttpSession session = req.getSession();
-                session.setAttribute("user", userOptional.get());
+                session.setAttribute("user", user);
+
+                // Сохраняем куку "Запомнить меня", если пользователь выбрал эту опцию
+                String rememberMe = req.getParameter("rememberMe");
+                if ("true".equals(rememberMe)) {
+                    CookieUtil.createRememberMeCookie(resp, user.getId());
+                    logger.debug("Remember me cookie created for user: {}", user.getId());
+                }
+
                 resp.sendRedirect(req.getContextPath() + "/home");
             } else {
                 req.setAttribute("error", "Неверный email или пароль.");

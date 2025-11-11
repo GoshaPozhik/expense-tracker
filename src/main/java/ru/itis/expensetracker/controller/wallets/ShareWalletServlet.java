@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.controller.wallets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.service.WalletService;
@@ -14,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 @WebServlet("/wallets/share")
 public class ShareWalletServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(ShareWalletServlet.class);
     private WalletService walletService;
 
     @Override
@@ -47,11 +50,14 @@ public class ShareWalletServlet extends HttpServlet {
             String redirectUrl = req.getContextPath() + "/expenses?walletId=" + walletId;
 
             walletService.shareWallet(walletId, owner.getId(), emailToShare.trim());
+            logger.info("Wallet shared: walletId={}, ownerId={}, sharedWith={}", walletId, owner.getId(), emailToShare);
             redirectUrl += "&share_success=true";
             resp.sendRedirect(redirectUrl);
         } catch (NumberFormatException e) {
+            logger.warn("Invalid wallet ID format: {}", req.getParameter("walletId"));
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
         } catch (ServiceException e) {
+            logger.warn("Error sharing wallet: {}", e.getMessage());
             String walletIdParam = req.getParameter("walletId");
             if (walletIdParam != null && !walletIdParam.trim().isEmpty()) {
                 try {
@@ -66,6 +72,7 @@ public class ShareWalletServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             }
         } catch (Exception e) {
+            logger.error("Unexpected error sharing wallet", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при предоставлении доступа к кошельку.");
         }
     }

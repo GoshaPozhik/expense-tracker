@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.controller.expenses;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.dto.ExpenseDetailDto;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.model.User;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @WebServlet("/expenses")
 public class ExpensesServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(ExpensesServlet.class);
     private WalletService walletService;
 
     @Override
@@ -51,11 +54,13 @@ public class ExpensesServlet extends HttpServlet {
             req.setAttribute("categories", categories);
             req.setAttribute("currentWalletId", walletId);
 
+            logger.debug("User {} loaded {} expenses for wallet {}", user.getId(), expenses.size(), walletId);
             req.getRequestDispatcher("/WEB-INF/jsp/expenses/list.jsp").forward(req, resp);
         } catch (NumberFormatException e) {
+            logger.warn("Invalid wallet ID format: {}", req.getParameter("walletId"));
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error loading expenses", e);
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Произошла ошибка при загрузке расходов.");
         }
     }

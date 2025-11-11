@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_DIR" value="${catalina.base:-.}/logs"/>
+    <property name="LOG_FILE" value="expense-tracker"/>
+
+    <!-- Консольный аппендер -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Файловый аппендер -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${LOG_FILE}.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${LOG_FILE}-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Логирование для нашего приложения -->
+    <logger name="ru.itis.expensetracker" level="DEBUG"/>
+
+    <!-- Логирование для сервлетов и фильтров -->
+    <logger name="ru.itis.expensetracker.controller" level="INFO"/>
+    <logger name="ru.itis.expensetracker.filter" level="INFO"/>
+    <logger name="ru.itis.expensetracker.service" level="DEBUG"/>
+    <logger name="ru.itis.expensetracker.dao" level="DEBUG"/>
+
+    <!-- Уменьшаем логирование для библиотек -->
+    <logger name="org.postgresql" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
+

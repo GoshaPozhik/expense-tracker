@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.dao.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.dao.CategoryDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Category;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class JdbcCategoryDao implements CategoryDao {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcCategoryDao.class);
 
     private static final String SAVE_SQL = "INSERT INTO categories (name, user_id) VALUES (?, ?)";
     private static final String FIND_BY_ID_SQL = "SELECT id, name, user_id FROM categories WHERE id = ?";
@@ -32,11 +35,13 @@ public class JdbcCategoryDao implements CategoryDao {
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
                     category.setId(keys.getLong(1));
+                    logger.debug("Category saved with ID: {}, name: {}", category.getId(), category.getName());
                     return category;
                 }
             }
             throw new DaoException("Failed to save category, no ID obtained.", null);
         } catch (SQLException e) {
+            logger.error("Error saving category", e);
             throw new DaoException("Error saving category", e);
         }
     }
@@ -47,10 +52,12 @@ public class JdbcCategoryDao implements CategoryDao {
             statement.setLong(1, id);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
+                    logger.debug("Category found by ID: {}", id);
                     return Optional.of(mapRowToCategory(rs));
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding category by id {}", id, e);
             throw new DaoException("Error finding category by id " + id, e);
         }
         return Optional.empty();
@@ -68,8 +75,10 @@ public class JdbcCategoryDao implements CategoryDao {
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding available categories for user {}", userId, e);
             throw new DaoException("Error finding available categories for user " + userId, e);
         }
+        logger.debug("Found {} available categories for user {}", categories.size(), userId);
         return categories;
     }
 
@@ -94,8 +103,10 @@ public class JdbcCategoryDao implements CategoryDao {
             PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
             statement.setString(1, category.getName());
             statement.setLong(2, category.getId());
-            statement.executeUpdate();
+            int updated = statement.executeUpdate();
+            logger.debug("Category updated: id={}, name={}, rows affected={}", category.getId(), category.getName(), updated);
         } catch (SQLException e) {
+            logger.error("Error updating category with id {}", category.getId(), e);
             throw new DaoException("Error updating category with id " + category.getId(), e);
         }
     }
@@ -103,9 +114,11 @@ public class JdbcCategoryDao implements CategoryDao {
     public void delete(long id) {
         try (Connection connection = DatabaseManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
-            statement.setLong(1,id);
-            statement.executeUpdate();
+            statement.setLong(1, id);
+            int deleted = statement.executeUpdate();
+            logger.debug("Category deleted: id={}, rows affected={}", id, deleted);
         } catch (SQLException e) {
+            logger.error("Error deleting category with id {}", id, e);
             throw new DaoException("Error deleting category with id " + id, e);
         }
     }

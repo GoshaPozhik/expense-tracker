@@ -1,5 +1,7 @@
 package ru.itis.expensetracker.dao.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.dao.WalletDao;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Wallet;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class JdbcWalletDao implements WalletDao {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcWalletDao.class);
 
     private static final String SAVE_WALLET_SQL = "INSERT INTO wallets (name, owner_id) VALUES (?, ?)";
     private static final String ADD_USER_TO_WALLET_SQL = "INSERT INTO user_wallets (user_id, wallet_id) VALUES (?, ?)";
@@ -43,15 +46,19 @@ public class JdbcWalletDao implements WalletDao {
             }
             addUserToWalletInternal(connection, wallet.getOwnerId(), wallet.getId());
             connection.commit();
+            logger.debug("Wallet saved with ID: {}, ownerId: {}", wallet.getId(), wallet.getOwnerId());
             return wallet;
         } catch (SQLException e) {
             if (connection != null) {
                 try {
                     connection.rollback();
+                    logger.warn("Transaction rolled back for wallet save");
                 } catch (SQLException ex) {
+                    logger.error("Error during transaction rollback", ex);
                     throw new DaoException("Error during transaction rollback", ex);
                 }
             }
+            logger.error("Error saving wallet", e);
             throw new DaoException("Error saving wallet", e);
         } finally {
             if (connection != null) {
@@ -96,8 +103,10 @@ public class JdbcWalletDao implements WalletDao {
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding wallets for user {}", userId, e);
             throw new DaoException("Error finding wallets for user " + userId, e);
         }
+        logger.debug("Found {} wallets for user {}", wallets.size(), userId);
         return wallets;
     }
 
@@ -108,10 +117,12 @@ public class JdbcWalletDao implements WalletDao {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    logger.debug("Wallet found by ID: {}", id);
                     return Optional.of(mapRowToWallet(rs));
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding wallet by id: {}", id, e);
             throw new DaoException("Error finding wallet by id: " + id, e);
         }
         return Optional.empty();
@@ -125,9 +136,12 @@ public class JdbcWalletDao implements WalletDao {
             stmt.setLong(2, wallet.getId());
             int updated = stmt.executeUpdate();
             if (updated == 0) {
+                logger.warn("No wallet updated with id {}", wallet.getId());
                 throw new DaoException("No wallet updated with id " + wallet.getId(), null);
             }
+            logger.debug("Wallet updated: id={}, name={}", wallet.getId(), wallet.getName());
         } catch (SQLException e) {
+            logger.error("Error updating wallet with id {}", wallet.getId(), e);
             throw new DaoException("Error updating wallet with id " + wallet.getId(), e);
         }
     }
@@ -136,8 +150,10 @@ public class JdbcWalletDao implements WalletDao {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement stmt = connection.prepareStatement(DELETE_SQL)) {
             stmt.setLong(1, id);
-            stmt.executeUpdate();
+            int deleted = stmt.executeUpdate();
+            logger.debug("Wallet deleted: id={}, rows affected={}", id, deleted);
         } catch (SQLException e) {
+            logger.error("Error deleting wallet with id {}", id, e);
             throw new DaoException("Error deleting wallet with id " + id, e);
         }
     }
@@ -157,9 +173,12 @@ public class JdbcWalletDao implements WalletDao {
             statement.setLong(1, walletId);
             statement.setLong(2, userId);
             try (ResultSet rs = statement.executeQuery()) {
-                return rs.next(); // Если есть хоть одна строка, значит доступ есть
+                boolean isShared = rs.next();
+                logger.debug("Wallet {} shared with user {}: {}", walletId, userId, isShared);
+                return isShared;
             }
         } catch (SQLException e) {
+            logger.error("Error checking wallet share for wallet {}", walletId, e);
             throw new DaoException("Error checking wallet share for wallet " + walletId, e);
         }
     }
@@ -170,10 +189,13 @@ public class JdbcWalletDao implements WalletDao {
             statement.setLong(1, walletId);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(rs.getLong("owner_id"));
+                    Long ownerId = rs.getLong("owner_id");
+                    logger.debug("Owner found for wallet {}: {}", walletId, ownerId);
+                    return Optional.of(ownerId);
                 }
             }
         } catch (SQLException e) {
+            logger.error("Error finding owner for wallet {}", walletId, e);
             throw new DaoException("Error finding owner for wallet " + walletId, e);
         }
         return Optional.empty();
