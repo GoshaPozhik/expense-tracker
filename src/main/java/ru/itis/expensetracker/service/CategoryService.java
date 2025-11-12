@@ -11,6 +11,5 @@ public interface CategoryService {
     Category createCategory(String name, long userId) throws ServiceException;
     void updateCategory(long categoryId, String name, long userId) throws ServiceException;
     void deleteCategory(long categoryId, long userId) throws ServiceException;
-    boolean canModifyCategory(long categoryId, long userId);
 }
 

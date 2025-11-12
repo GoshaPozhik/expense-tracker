@@ -29,10 +29,10 @@
     <logger name="ru.itis.expensetracker" level="DEBUG"/>
 
     <!-- Логирование для сервлетов и фильтров -->
-    <logger name="ru.itis.expensetracker.controller" level="INFO"/>
+    <logger name="ru.itis.expensetracker.servlet" level="INFO"/>
     <logger name="ru.itis.expensetracker.filter" level="INFO"/>
     <logger name="ru.itis.expensetracker.service" level="DEBUG"/>
-    <logger name="ru.itis.expensetracker.dao" level="DEBUG"/>
+    <logger name="ru.itis.expensetracker.repository" level="DEBUG"/>
 
     <!-- Уменьшаем логирование для библиотек -->
     <logger name="org.postgresql" level="WARN"/>

@@ -1,4 +1,4 @@
-package ru.itis.expensetracker.controller.auth;
+package ru.itis.expensetracker.servlet.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,6 @@ public class LoginServlet extends HttpServlet {
                 HttpSession session = req.getSession();
                 session.setAttribute("user", user);
 
-                // Сохраняем куку "Запомнить меня", если пользователь выбрал эту опцию
                 String rememberMe = req.getParameter("rememberMe");
                 if ("true".equals(rememberMe)) {
                     CookieUtil.createRememberMeCookie(resp, user.getId());

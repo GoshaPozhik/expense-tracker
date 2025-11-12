@@ -24,28 +24,22 @@ public class CsrfFilter implements Filter {
         String method = request.getMethod();
         String uri = request.getRequestURI();
 
-        // Пропускаем GET-запросы и статические ресурсы
-        if ("GET".equals(method) || uri.endsWith(".css") || uri.endsWith(".js") || uri.endsWith(".png") 
-                || uri.endsWith(".jpg") || uri.endsWith(".ico")) {
+        if ("GET".equals(method) || uri.endsWith(".css") || uri.endsWith(".js")) {
             chain.doFilter(request, response);
             return;
         }
 
-        // CSRF-защита применяется ко всем POST-запросам
-        // Для login и register создаем сессию, если её нет
         HttpSession session;
         if (uri.endsWith("/login") || uri.endsWith("/register")) {
             session = request.getSession(true);
         } else {
             session = request.getSession(false);
-            // Если нет сессии для других эндпоинтов, пропускаем (AuthFilter обработает)
             if (session == null) {
                 chain.doFilter(request, response);
                 return;
             }
         }
 
-        // Проверяем CSRF-токен для POST/PUT/DELETE запросов
         String submittedToken = request.getParameter("csrfToken");
         
         if (!CsrfTokenUtil.isValidToken(session, submittedToken)) {
@@ -54,7 +48,6 @@ public class CsrfFilter implements Filter {
             return;
         }
 
-        // После успешной проверки генерируем новый токен
         CsrfTokenUtil.generateToken(session);
         
         chain.doFilter(request, response);

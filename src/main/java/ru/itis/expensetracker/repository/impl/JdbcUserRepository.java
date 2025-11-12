@@ -1,16 +1,16 @@
-package ru.itis.expensetracker.dao.impl;
+package ru.itis.expensetracker.repository.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dao.UserDao;
+import ru.itis.expensetracker.repository.UserRepository;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.util.DatabaseManager;
 import java.sql.*;
 import java.util.Optional;
 
-public class JdbcUserDao implements UserDao {
-    private static final Logger logger = LoggerFactory.getLogger(JdbcUserDao.class);
+public class JdbcUserRepository implements UserRepository {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcUserRepository.class);
 
     private static final String SAVE_SQL = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
     private static final String FIND_BY_EMAIL_SQL = "SELECT id, username, email, password_hash FROM users WHERE email = ?";

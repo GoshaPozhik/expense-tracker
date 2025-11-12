@@ -2,7 +2,7 @@ package ru.itis.expensetracker.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dao.CategoryDao;
+import ru.itis.expensetracker.repository.CategoryRepository;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.Category;
@@ -14,23 +14,22 @@ import java.util.Optional;
 public class CategoryServiceImpl implements CategoryService {
     private static final Logger logger = LoggerFactory.getLogger(CategoryServiceImpl.class);
 
-    private final CategoryDao categoryDao;
+    private final CategoryRepository categoryRepository;
 
-    public CategoryServiceImpl(CategoryDao categoryDao) {
-        this.categoryDao = categoryDao;
+    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
     public List<Category> getAllCategoriesForUser(long userId) {
-        return categoryDao.findAvailableForUser(userId);
+        return categoryRepository.findAvailableForUser(userId);
     }
 
     @Override
     public Category getCategoryById(long categoryId, long userId) throws ServiceException {
-        Category category = categoryDao.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ServiceException("Категория с ID " + categoryId + " не найдена."));
 
-        // Проверяем, что пользователь может видеть эту категорию
         if (category.getUserId() != null && !category.getUserId().equals(userId)) {
             throw new ServiceException("Доступ к категории запрещен.");
         }
@@ -55,7 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .build();
 
         try {
-            Category saved = categoryDao.save(category);
+            Category saved = categoryRepository.save(category);
             logger.info("Category created: {} by user: {}", trimmedName, userId);
             return saved;
         } catch (DaoException e) {
@@ -66,15 +65,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void updateCategory(long categoryId, String name, long userId) throws ServiceException {
-        Category category = categoryDao.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ServiceException("Категория с ID " + categoryId + " не найдена."));
 
-        // Глобальные категории (user_id = NULL) нельзя редактировать
         if (category.getUserId() == null) {
             throw new ServiceException("Глобальные категории нельзя редактировать.");
         }
 
-        // Проверяем права доступа
         if (!category.getUserId().equals(userId)) {
             throw new ServiceException("Вы не можете редактировать эту категорию.");
         }
@@ -91,7 +88,7 @@ public class CategoryServiceImpl implements CategoryService {
         category.setName(trimmedName);
 
         try {
-            categoryDao.update(category);
+            categoryRepository.update(category);
             logger.info("Category updated: {} by user: {}", categoryId, userId);
         } catch (DaoException e) {
             logger.error("Error updating category: {}", categoryId, e);
@@ -101,43 +98,24 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCategory(long categoryId, long userId) throws ServiceException {
-        Category category = categoryDao.findById(categoryId)
+        Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ServiceException("Категория с ID " + categoryId + " не найдена."));
 
-        // Глобальные категории нельзя удалять
         if (category.getUserId() == null) {
             throw new ServiceException("Глобальные категории нельзя удалять.");
         }
 
-        // Проверяем права доступа
         if (!category.getUserId().equals(userId)) {
             throw new ServiceException("Вы не можете удалить эту категорию.");
         }
 
         try {
-            categoryDao.delete(categoryId);
+            categoryRepository.delete(categoryId);
             logger.info("Category deleted: {} by user: {}", categoryId, userId);
         } catch (DaoException e) {
             logger.error("Error deleting category: {}", categoryId, e);
             throw new ServiceException("Не удалось удалить категорию.", e);
         }
-    }
-
-    @Override
-    public boolean canModifyCategory(long categoryId, long userId) {
-        Optional<Category> categoryOpt = categoryDao.findById(categoryId);
-        if (categoryOpt.isEmpty()) {
-            return false;
-        }
-
-        Category category = categoryOpt.get();
-        // Глобальные категории нельзя модифицировать
-        if (category.getUserId() == null) {
-            return false;
-        }
-
-        // Только владелец может модифицировать
-        return category.getUserId().equals(userId);
     }
 }
 

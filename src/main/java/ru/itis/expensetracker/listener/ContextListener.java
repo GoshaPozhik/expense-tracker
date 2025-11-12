@@ -2,14 +2,14 @@ package ru.itis.expensetracker.listener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dao.CategoryDao;
-import ru.itis.expensetracker.dao.ExpenseDao;
-import ru.itis.expensetracker.dao.UserDao;
-import ru.itis.expensetracker.dao.WalletDao;
-import ru.itis.expensetracker.dao.impl.JdbcCategoryDao;
-import ru.itis.expensetracker.dao.impl.JdbcExpenseDao;
-import ru.itis.expensetracker.dao.impl.JdbcUserDao;
-import ru.itis.expensetracker.dao.impl.JdbcWalletDao;
+import ru.itis.expensetracker.repository.CategoryRepository;
+import ru.itis.expensetracker.repository.ExpenseRepository;
+import ru.itis.expensetracker.repository.UserRepository;
+import ru.itis.expensetracker.repository.WalletRepository;
+import ru.itis.expensetracker.repository.impl.JdbcCategoryRepository;
+import ru.itis.expensetracker.repository.impl.JdbcExpenseRepository;
+import ru.itis.expensetracker.repository.impl.JdbcUserRepository;
+import ru.itis.expensetracker.repository.impl.JdbcWalletRepository;
 import ru.itis.expensetracker.service.AuthService;
 import ru.itis.expensetracker.service.CategoryService;
 import ru.itis.expensetracker.service.WalletService;
@@ -30,14 +30,14 @@ public class ContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         ServletContext servletContext = sce.getServletContext();
 
-        UserDao userDao = new JdbcUserDao();
-        WalletDao walletDao = new JdbcWalletDao();
-        CategoryDao categoryDao = new JdbcCategoryDao();
-        ExpenseDao expenseDao = new JdbcExpenseDao();
+        UserRepository userRepository = new JdbcUserRepository();
+        WalletRepository walletRepository = new JdbcWalletRepository();
+        CategoryRepository categoryRepository = new JdbcCategoryRepository();
+        ExpenseRepository expenseRepository = new JdbcExpenseRepository();
 
-        AuthService authService = new AuthServiceImpl(userDao, walletDao);
-        WalletService walletService = new WalletServiceImpl(walletDao, expenseDao, categoryDao, userDao);
-        CategoryService categoryService = new CategoryServiceImpl(categoryDao);
+        AuthService authService = new AuthServiceImpl(userRepository, walletRepository);
+        WalletService walletService = new WalletServiceImpl(walletRepository, expenseRepository, categoryRepository, userRepository);
+        CategoryService categoryService = new CategoryServiceImpl(categoryRepository);
 
         servletContext.setAttribute("authService", authService);
         servletContext.setAttribute("walletService", walletService);

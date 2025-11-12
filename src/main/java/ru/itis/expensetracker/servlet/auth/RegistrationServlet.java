@@ -1,4 +1,4 @@
-package ru.itis.expensetracker.controller.auth;
+package ru.itis.expensetracker.servlet.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,6 @@ public class RegistrationServlet extends HttpServlet {
             String password = req.getParameter("password");
             String confirmPassword = req.getParameter("confirmPassword");
 
-            // Базовая проверка на null (детальная валидация в сервисе)
             if (username == null || email == null || password == null || confirmPassword == null) {
                 req.setAttribute("error", "Все поля обязательны для заполнения.");
                 req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);

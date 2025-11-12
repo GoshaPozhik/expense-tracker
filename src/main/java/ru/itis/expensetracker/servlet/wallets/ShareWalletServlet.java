@@ -1,4 +1,4 @@
-package ru.itis.expensetracker.controller.wallets;
+package ru.itis.expensetracker.servlet.wallets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

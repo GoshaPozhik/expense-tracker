@@ -9,18 +9,12 @@ import java.util.Optional;
 public class CookieUtil {
     private static final String REMEMBER_ME_COOKIE_NAME = "rememberMe";
     private static final String USER_ID_COOKIE_NAME = "userId";
-    private static final int COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 дней в секундах
+    private static final int COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
-    /**
-     * Создает куку для "Запомнить меня"
-     */
     public static void createRememberMeCookie(HttpServletResponse response, Long userId) {
         Cookie userIdCookie = new Cookie(USER_ID_COOKIE_NAME, String.valueOf(userId));
         userIdCookie.setMaxAge(COOKIE_MAX_AGE);
         userIdCookie.setPath("/");
-        // setHttpOnly() доступен только в Servlet 3.0+, используем без него для совместимости
-        // setSecure(true) нужно использовать только для HTTPS
-        // userIdCookie.setSecure(true);
         response.addCookie(userIdCookie);
 
         Cookie rememberMeCookie = new Cookie(REMEMBER_ME_COOKIE_NAME, "true");
@@ -29,9 +23,6 @@ public class CookieUtil {
         response.addCookie(rememberMeCookie);
     }
 
-    /**
-     * Удаляет куки "Запомнить меня"
-     */
     public static void deleteRememberMeCookies(HttpServletResponse response) {
         Cookie userIdCookie = new Cookie(USER_ID_COOKIE_NAME, "");
         userIdCookie.setMaxAge(0);
@@ -44,9 +35,6 @@ public class CookieUtil {
         response.addCookie(rememberMeCookie);
     }
 
-    /**
-     * Получает значение куки по имени
-     */
     public static Optional<String> getCookieValue(HttpServletRequest request, String cookieName) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
@@ -58,18 +46,12 @@ public class CookieUtil {
                 .findFirst();
     }
 
-    /**
-     * Проверяет, установлена ли кука "Запомнить меня"
-     */
     public static boolean hasRememberMeCookie(HttpServletRequest request) {
         return getCookieValue(request, REMEMBER_ME_COOKIE_NAME)
                 .map("true"::equals)
                 .orElse(false);
     }
 
-    /**
-     * Получает ID пользователя из куки
-     */
     public static Optional<Long> getUserIdFromCookie(HttpServletRequest request) {
         return getCookieValue(request, USER_ID_COOKIE_NAME)
                 .map(value -> {

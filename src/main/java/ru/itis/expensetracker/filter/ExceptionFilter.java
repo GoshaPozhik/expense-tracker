@@ -9,9 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * Фильтр для глобальной обработки исключений
- */
 @WebFilter("/*")
 public class ExceptionFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(ExceptionFilter.class);
@@ -27,7 +24,6 @@ public class ExceptionFilter implements Filter {
         } catch (Exception e) {
             logger.error("Unhandled exception in filter chain for URI: {}", request.getRequestURI(), e);
             
-            // Если ответ еще не был отправлен
             if (!response.isCommitted()) {
                 request.setAttribute("javax.servlet.error.exception", e);
                 request.setAttribute("javax.servlet.error.request_uri", request.getRequestURI());

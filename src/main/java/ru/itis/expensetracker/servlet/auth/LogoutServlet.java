@@ -1,4 +1,4 @@
-package ru.itis.expensetracker.controller.auth;
+package ru.itis.expensetracker.servlet.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,6 @@ public class LogoutServlet extends HttpServlet {
             session.invalidate();
         }
         
-        // Удаляем куки "Запомнить меня"
         CookieUtil.deleteRememberMeCookies(resp);
         
         resp.sendRedirect(req.getContextPath() + "/login");

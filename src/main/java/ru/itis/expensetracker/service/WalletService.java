@@ -11,7 +11,6 @@ import java.util.List;
 
 public interface WalletService {
     List<Wallet> getWalletsForUser(long userId);
-    List<Expense> getExpensesForWallet(long walletId);
     List<ExpenseDetailDto> getDetailedExpensesForWallet(long walletId);
     List<Category> getAvailableCategoriesForUser(long userId);
     Expense addExpense(BigDecimal amount, String description, long userId, long walletId, long categoryId) throws ServiceException;
@@ -20,7 +19,6 @@ public interface WalletService {
     boolean hasAccessToWallet(long walletId, long userId);
     void updateExpense(Expense expense, long userId) throws ServiceException;
     Expense getExpenseById(long expenseId, long userId) throws ServiceException;
-    List<Category> getAllCategories();
     Wallet createWallet(String walletName, long userId) throws ServiceException;
     Wallet getWalletById(long walletId, long userId) throws ServiceException;
     void updateWallet(long walletId, String walletName, long userId) throws ServiceException;

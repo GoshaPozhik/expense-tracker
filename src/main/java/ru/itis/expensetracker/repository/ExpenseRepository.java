@@ -1,10 +1,10 @@
-package ru.itis.expensetracker.dao;
+package ru.itis.expensetracker.repository;
 
 import ru.itis.expensetracker.model.Expense;
 import java.util.List;
 import java.util.Optional;
 
-public interface ExpenseDao {
+public interface ExpenseRepository {
     Expense save(Expense expense);
     List<Expense> findAllByWalletId(long walletId);
     Optional<Expense> findById(long id);

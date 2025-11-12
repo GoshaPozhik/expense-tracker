@@ -1,8 +1,8 @@
-package ru.itis.expensetracker.dao.impl;
+package ru.itis.expensetracker.repository.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dao.CategoryDao;
+import ru.itis.expensetracker.repository.CategoryRepository;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.util.DatabaseManager;
@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class JdbcCategoryDao implements CategoryDao {
-    private static final Logger logger = LoggerFactory.getLogger(JdbcCategoryDao.class);
+public class JdbcCategoryRepository implements CategoryRepository {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcCategoryRepository.class);
 
     private static final String SAVE_SQL = "INSERT INTO categories (name, user_id) VALUES (?, ?)";
     private static final String FIND_BY_ID_SQL = "SELECT id, name, user_id FROM categories WHERE id = ?";

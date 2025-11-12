@@ -1,8 +1,8 @@
-package ru.itis.expensetracker.dao.impl;
+package ru.itis.expensetracker.repository.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dao.WalletDao;
+import ru.itis.expensetracker.repository.WalletRepository;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Wallet;
 import ru.itis.expensetracker.util.DatabaseManager;
@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class JdbcWalletDao implements WalletDao {
-    private static final Logger logger = LoggerFactory.getLogger(JdbcWalletDao.class);
+public class JdbcWalletRepository implements WalletRepository {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcWalletRepository.class);
 
     private static final String SAVE_WALLET_SQL = "INSERT INTO wallets (name, owner_id) VALUES (?, ?)";
     private static final String ADD_USER_TO_WALLET_SQL = "INSERT INTO user_wallets (user_id, wallet_id) VALUES (?, ?)";

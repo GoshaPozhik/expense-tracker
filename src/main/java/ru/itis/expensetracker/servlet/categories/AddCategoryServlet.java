@@ -1,4 +1,4 @@
-package ru.itis.expensetracker.controller.categories;
+package ru.itis.expensetracker.servlet.categories;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
-package ru.itis.expensetracker.dao.impl;
+package ru.itis.expensetracker.repository.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dao.ExpenseDao;
+import ru.itis.expensetracker.repository.ExpenseRepository;
 import ru.itis.expensetracker.exception.DaoException;
 import ru.itis.expensetracker.model.Expense;
 import ru.itis.expensetracker.util.DatabaseManager;
@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class JdbcExpenseDao implements ExpenseDao {
-    private static final Logger logger = LoggerFactory.getLogger(JdbcExpenseDao.class);
+public class JdbcExpenseRepository implements ExpenseRepository {
+    private static final Logger logger = LoggerFactory.getLogger(JdbcExpenseRepository.class);
 
     private static final String SAVE_SQL = "INSERT INTO expenses (amount, description, expense_date, user_id, wallet_id, category_id) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String FIND_BY_WALLET_SQL = "SELECT id, amount, description, expense_date, user_id, wallet_id, category_id FROM expenses WHERE wallet_id = ? ORDER BY expense_date DESC";

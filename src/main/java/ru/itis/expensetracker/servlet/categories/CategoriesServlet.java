@@ -1,4 +1,4 @@
-package ru.itis.expensetracker.controller.categories;
+package ru.itis.expensetracker.servlet.categories;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,6 @@ public class CategoriesServlet extends HttpServlet {
 
             List<Category> allCategories = categoryService.getAllCategoriesForUser(user.getId());
             
-            // Разделяем на глобальные и пользовательские
             List<Category> globalCategories = allCategories.stream()
                     .filter(c -> c.getUserId() == null)
                     .collect(Collectors.toList());
