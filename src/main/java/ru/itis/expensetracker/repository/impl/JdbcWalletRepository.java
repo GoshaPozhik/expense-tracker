@@ -3,7 +3,7 @@ package ru.itis.expensetracker.repository.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.repository.WalletRepository;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.model.Wallet;
 import ru.itis.expensetracker.util.DatabaseManager;
 import java.sql.*;
@@ -55,11 +55,11 @@ public class JdbcWalletRepository implements WalletRepository {
                     logger.warn("Transaction rolled back for wallet save");
                 } catch (SQLException ex) {
                     logger.error("Error during transaction rollback", ex);
-                    throw new DaoException("Error during transaction rollback", ex);
+                    throw new RepositoryException("Error during transaction rollback", ex);
                 }
             }
             logger.error("Error saving wallet", e);
-            throw new DaoException("Error saving wallet", e);
+            throw new RepositoryException("Error saving wallet", e);
         } finally {
             if (connection != null) {
                 try {
@@ -79,7 +79,7 @@ public class JdbcWalletRepository implements WalletRepository {
             if ("23505".equals(e.getSQLState())) {
                 System.out.println("User " + userId + " is already in wallet " + walletId);
             } else {
-                throw new DaoException("Error adding user to wallet", e);
+                throw new RepositoryException("Error adding user to wallet", e);
             }
         }
     }
@@ -104,7 +104,7 @@ public class JdbcWalletRepository implements WalletRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding wallets for user {}", userId, e);
-            throw new DaoException("Error finding wallets for user " + userId, e);
+            throw new RepositoryException("Error finding wallets for user " + userId, e);
         }
         logger.debug("Found {} wallets for user {}", wallets.size(), userId);
         return wallets;
@@ -123,7 +123,7 @@ public class JdbcWalletRepository implements WalletRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding wallet by id: {}", id, e);
-            throw new DaoException("Error finding wallet by id: " + id, e);
+            throw new RepositoryException("Error finding wallet by id: " + id, e);
         }
         return Optional.empty();
     }
@@ -137,12 +137,12 @@ public class JdbcWalletRepository implements WalletRepository {
             int updated = stmt.executeUpdate();
             if (updated == 0) {
                 logger.warn("No wallet updated with id {}", wallet.getId());
-                throw new DaoException("No wallet updated with id " + wallet.getId(), null);
+                throw new RepositoryException("No wallet updated with id " + wallet.getId(), null);
             }
             logger.debug("Wallet updated: id={}, name={}", wallet.getId(), wallet.getName());
         } catch (SQLException e) {
             logger.error("Error updating wallet with id {}", wallet.getId(), e);
-            throw new DaoException("Error updating wallet with id " + wallet.getId(), e);
+            throw new RepositoryException("Error updating wallet with id " + wallet.getId(), e);
         }
     }
     @Override
@@ -154,7 +154,7 @@ public class JdbcWalletRepository implements WalletRepository {
             logger.debug("Wallet deleted: id={}, rows affected={}", id, deleted);
         } catch (SQLException e) {
             logger.error("Error deleting wallet with id {}", id, e);
-            throw new DaoException("Error deleting wallet with id " + id, e);
+            throw new RepositoryException("Error deleting wallet with id " + id, e);
         }
     }
 
@@ -179,7 +179,7 @@ public class JdbcWalletRepository implements WalletRepository {
             }
         } catch (SQLException e) {
             logger.error("Error checking wallet share for wallet {}", walletId, e);
-            throw new DaoException("Error checking wallet share for wallet " + walletId, e);
+            throw new RepositoryException("Error checking wallet share for wallet " + walletId, e);
         }
     }
     @Override
@@ -196,7 +196,7 @@ public class JdbcWalletRepository implements WalletRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding owner for wallet {}", walletId, e);
-            throw new DaoException("Error finding owner for wallet " + walletId, e);
+            throw new RepositoryException("Error finding owner for wallet " + walletId, e);
         }
         return Optional.empty();
     }

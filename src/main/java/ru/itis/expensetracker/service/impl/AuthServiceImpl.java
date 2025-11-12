@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.repository.UserRepository;
 import ru.itis.expensetracker.repository.WalletRepository;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.model.Wallet;
@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
 
             return savedUser;
 
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error registering user: {}", email, e);
             throw new ServiceException("Не удалось зарегистрировать пользователя.", e);
         }

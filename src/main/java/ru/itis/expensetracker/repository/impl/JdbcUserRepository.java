@@ -3,7 +3,7 @@ package ru.itis.expensetracker.repository.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.repository.UserRepository;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.model.User;
 import ru.itis.expensetracker.util.DatabaseManager;
 import java.sql.*;
@@ -25,7 +25,7 @@ public class JdbcUserRepository implements UserRepository {
             statement.setString(3, user.getPasswordHash());
             int affectedRows = statement.executeUpdate();
             if (affectedRows == 0) {
-                throw new DaoException("Creating user failed, no rows affected.", null);
+                throw new RepositoryException("Creating user failed, no rows affected.", null);
             }
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
@@ -33,12 +33,12 @@ public class JdbcUserRepository implements UserRepository {
                     logger.debug("User saved with ID: {}", user.getId());
                     return user;
                 } else {
-                    throw new DaoException("Creating user failed, no ID obtained.", null);
+                    throw new RepositoryException("Creating user failed, no ID obtained.", null);
                 }
             }
         } catch (SQLException e) {
             logger.error("Error saving user: {}", user.getEmail(), e);
-            throw new DaoException("Error saving user: " + user.getEmail(), e);
+            throw new RepositoryException("Error saving user: " + user.getEmail(), e);
         }
     }
 
@@ -55,7 +55,7 @@ public class JdbcUserRepository implements UserRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding user by email: {}", email, e);
-            throw new DaoException("Error finding user by email: " + email, e);
+            throw new RepositoryException("Error finding user by email: " + email, e);
         }
         return Optional.empty();
     }
@@ -73,7 +73,7 @@ public class JdbcUserRepository implements UserRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding user by id: {}", id, e);
-            throw new DaoException("Error finding user by id: " + id, e);
+            throw new RepositoryException("Error finding user by id: " + id, e);
         }
         return Optional.empty();
     }

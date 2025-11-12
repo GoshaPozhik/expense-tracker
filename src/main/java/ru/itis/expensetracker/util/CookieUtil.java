@@ -15,6 +15,7 @@ public class CookieUtil {
         Cookie userIdCookie = new Cookie(USER_ID_COOKIE_NAME, String.valueOf(userId));
         userIdCookie.setMaxAge(COOKIE_MAX_AGE);
         userIdCookie.setPath("/");
+        userIdCookie.setHttpOnly(true);
         response.addCookie(userIdCookie);
 
         Cookie rememberMeCookie = new Cookie(REMEMBER_ME_COOKIE_NAME, "true");
@@ -63,4 +64,3 @@ public class CookieUtil {
                 });
     }
 }
-

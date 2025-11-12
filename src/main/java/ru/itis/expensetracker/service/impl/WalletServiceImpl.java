@@ -5,7 +5,7 @@ import ru.itis.expensetracker.repository.ExpenseRepository;
 import ru.itis.expensetracker.repository.UserRepository;
 import ru.itis.expensetracker.repository.WalletRepository;
 import ru.itis.expensetracker.dto.ExpenseDetailDto;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.model.Expense;
@@ -96,7 +96,7 @@ public class WalletServiceImpl implements WalletService {
             logger.debug("Expense added: id={}, amount={}, walletId={}, userId={}", 
                     saved.getId(), amount, walletId, userId);
             return saved;
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error adding expense", e);
             throw new ServiceException("Не удалось добавить расход.", e);
         }
@@ -122,7 +122,7 @@ public class WalletServiceImpl implements WalletService {
             walletRepository.addUserToWallet(userToShareWith.getId(), walletId);
             logger.debug("Wallet shared: walletId={}, ownerId={}, sharedWithUserId={}", 
                     walletId, ownerId, userToShareWith.getId());
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error sharing wallet", e);
             throw new ServiceException("Не удалось предоставить доступ к кошельку.", e);
         }
@@ -199,7 +199,7 @@ public class WalletServiceImpl implements WalletService {
             logger.debug("Wallet created: id={}, name={}, ownerId={}", 
                     saved.getId(), saved.getName(), saved.getOwnerId());
             return saved;
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error creating wallet", e);
             throw new ServiceException("Не удалось создать кошелек.", e);
         }
@@ -240,7 +240,7 @@ public class WalletServiceImpl implements WalletService {
         try {
             walletRepository.update(wallet);
             logger.info("Wallet updated: {} by user: {}", walletId, userId);
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error updating wallet: {}", walletId, e);
             throw new ServiceException("Не удалось обновить кошелек.", e);
         }
@@ -258,7 +258,7 @@ public class WalletServiceImpl implements WalletService {
         try {
             walletRepository.delete(walletId);
             logger.info("Wallet deleted: {} by user: {}", walletId, userId);
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error deleting wallet: {}", walletId, e);
             throw new ServiceException("Не удалось удалить кошелек.", e);
         }

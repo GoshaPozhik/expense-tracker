@@ -368,18 +368,3 @@ h2 {
 .container {
     max-width: 1200px;
 }
-
-@media (max-width: 768px) {
-    body {
-        padding-top: 60px;
-    }
-    
-    .auth-card {
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-    
-    h1 {
-        font-size: 1.5rem;
-    }
-}

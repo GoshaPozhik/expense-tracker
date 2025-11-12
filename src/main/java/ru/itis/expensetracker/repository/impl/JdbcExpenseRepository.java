@@ -3,7 +3,7 @@ package ru.itis.expensetracker.repository.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.repository.ExpenseRepository;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.model.Expense;
 import ru.itis.expensetracker.util.DatabaseManager;
 import java.sql.*;
@@ -39,10 +39,10 @@ public class JdbcExpenseRepository implements ExpenseRepository {
                     return expense;
                 }
             }
-            throw new DaoException("Failed to save expense, no ID obtained.", null);
+            throw new RepositoryException("Failed to save expense, no ID obtained.", null);
         } catch (SQLException e) {
             logger.error("Error saving expense", e);
-            throw new DaoException("Error saving expense", e);
+            throw new RepositoryException("Error saving expense", e);
         }
     }
 
@@ -59,7 +59,7 @@ public class JdbcExpenseRepository implements ExpenseRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding expenses for wallet {}", walletId, e);
-            throw new DaoException("Error finding expenses for wallet " + walletId, e);
+            throw new RepositoryException("Error finding expenses for wallet " + walletId, e);
         }
         logger.debug("Found {} expenses for wallet {}", expenses.size(), walletId);
         return expenses;
@@ -78,7 +78,7 @@ public class JdbcExpenseRepository implements ExpenseRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding expense by id {}", id, e);
-            throw new DaoException("Error finding expense by id " + id, e);
+            throw new RepositoryException("Error finding expense by id " + id, e);
         }
         return Optional.empty();
     }
@@ -96,7 +96,7 @@ public class JdbcExpenseRepository implements ExpenseRepository {
             logger.debug("Expense updated: id={}, rows affected={}", expense.getId(), updated);
         } catch (SQLException e) {
             logger.error("Error updating expense with id {}", expense.getId(), e);
-            throw new DaoException("Error updating expense with id " + expense.getId(), e);
+            throw new RepositoryException("Error updating expense with id " + expense.getId(), e);
         }
     }
 
@@ -109,7 +109,7 @@ public class JdbcExpenseRepository implements ExpenseRepository {
             logger.debug("Expense deleted: id={}, rows affected={}", id, deleted);
         } catch (SQLException e) {
             logger.error("Error deleting expense with id {}", id, e);
-            throw new DaoException("Error deleting expense with id " + id, e);
+            throw new RepositoryException("Error deleting expense with id " + id, e);
         }
     }
 

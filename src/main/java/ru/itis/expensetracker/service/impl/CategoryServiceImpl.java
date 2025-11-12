@@ -3,13 +3,12 @@ package ru.itis.expensetracker.service.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.repository.CategoryRepository;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.exception.ServiceException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.service.CategoryService;
 
 import java.util.List;
-import java.util.Optional;
 
 public class CategoryServiceImpl implements CategoryService {
     private static final Logger logger = LoggerFactory.getLogger(CategoryServiceImpl.class);
@@ -57,7 +56,7 @@ public class CategoryServiceImpl implements CategoryService {
             Category saved = categoryRepository.save(category);
             logger.info("Category created: {} by user: {}", trimmedName, userId);
             return saved;
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error creating category: {}", trimmedName, e);
             throw new ServiceException("Не удалось создать категорию.", e);
         }
@@ -90,7 +89,7 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             categoryRepository.update(category);
             logger.info("Category updated: {} by user: {}", categoryId, userId);
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error updating category: {}", categoryId, e);
             throw new ServiceException("Не удалось обновить категорию.", e);
         }
@@ -112,7 +111,7 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             categoryRepository.delete(categoryId);
             logger.info("Category deleted: {} by user: {}", categoryId, userId);
-        } catch (DaoException e) {
+        } catch (RepositoryException e) {
             logger.error("Error deleting category: {}", categoryId, e);
             throw new ServiceException("Не удалось удалить категорию.", e);
         }

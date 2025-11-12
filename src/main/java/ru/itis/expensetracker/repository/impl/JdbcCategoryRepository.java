@@ -3,7 +3,7 @@ package ru.itis.expensetracker.repository.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itis.expensetracker.repository.CategoryRepository;
-import ru.itis.expensetracker.exception.DaoException;
+import ru.itis.expensetracker.exception.RepositoryException;
 import ru.itis.expensetracker.model.Category;
 import ru.itis.expensetracker.util.DatabaseManager;
 import java.sql.*;
@@ -39,10 +39,10 @@ public class JdbcCategoryRepository implements CategoryRepository {
                     return category;
                 }
             }
-            throw new DaoException("Failed to save category, no ID obtained.", null);
+            throw new RepositoryException("Failed to save category, no ID obtained.", null);
         } catch (SQLException e) {
             logger.error("Error saving category", e);
-            throw new DaoException("Error saving category", e);
+            throw new RepositoryException("Error saving category", e);
         }
     }
     @Override
@@ -58,7 +58,7 @@ public class JdbcCategoryRepository implements CategoryRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding category by id {}", id, e);
-            throw new DaoException("Error finding category by id " + id, e);
+            throw new RepositoryException("Error finding category by id " + id, e);
         }
         return Optional.empty();
     }
@@ -76,7 +76,7 @@ public class JdbcCategoryRepository implements CategoryRepository {
             }
         } catch (SQLException e) {
             logger.error("Error finding available categories for user {}", userId, e);
-            throw new DaoException("Error finding available categories for user " + userId, e);
+            throw new RepositoryException("Error finding available categories for user " + userId, e);
         }
         logger.debug("Found {} available categories for user {}", categories.size(), userId);
         return categories;
@@ -92,7 +92,7 @@ public class JdbcCategoryRepository implements CategoryRepository {
                 categories.add(mapRowToCategory(rs));
             }
         } catch (SQLException e) {
-            throw new DaoException("Error finding all categories", e);
+            throw new RepositoryException("Error finding all categories", e);
         }
         return categories;
     }
@@ -107,7 +107,7 @@ public class JdbcCategoryRepository implements CategoryRepository {
             logger.debug("Category updated: id={}, name={}, rows affected={}", category.getId(), category.getName(), updated);
         } catch (SQLException e) {
             logger.error("Error updating category with id {}", category.getId(), e);
-            throw new DaoException("Error updating category with id " + category.getId(), e);
+            throw new RepositoryException("Error updating category with id " + category.getId(), e);
         }
     }
     @Override
@@ -119,7 +119,7 @@ public class JdbcCategoryRepository implements CategoryRepository {
             logger.debug("Category deleted: id={}, rows affected={}", id, deleted);
         } catch (SQLException e) {
             logger.error("Error deleting category with id {}", id, e);
-            throw new DaoException("Error deleting category with id " + id, e);
+            throw new RepositoryException("Error deleting category with id " + id, e);
         }
     }
 
