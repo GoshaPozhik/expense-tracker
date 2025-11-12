@@ -15,16 +15,16 @@ public class JdbcWalletRepository implements WalletRepository {
     private static final Logger logger = LoggerFactory.getLogger(JdbcWalletRepository.class);
 
     private static final String SAVE_WALLET_SQL = "INSERT INTO wallets (name, owner_id) VALUES (?, ?)";
-    private static final String ADD_USER_TO_WALLET_SQL = "INSERT INTO user_wallets (user_id, wallet_id) VALUES (?, ?)";
     private static final String FIND_BY_ID_SQL = "SELECT id, name, owner_id FROM wallets WHERE id = ?";
     private static final String FIND_ALL_BY_USER_ID_SQL =
             "SELECT w.id, w.name, w.owner_id FROM wallets w " +
                     "JOIN user_wallets uw ON w.id = uw.wallet_id " +
                     "WHERE uw.user_id = ?";
-    private static final String IS_SHARED_WITH_SQL = "SELECT 1 FROM user_wallets WHERE wallet_id = ? AND user_id = ?";
-    private static final String FIND_OWNER_ID_SQL = "SELECT owner_id FROM wallets WHERE id = ?";
     private static final String UPDATE_SQL = "UPDATE wallets SET name = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM wallets WHERE id = ?";
+    private static final String ADD_USER_TO_WALLET_SQL = "INSERT INTO user_wallets (user_id, wallet_id) VALUES (?, ?)";
+    private static final String IS_SHARED_WITH_SQL = "SELECT 1 FROM user_wallets WHERE wallet_id = ? AND user_id = ?";
+    private static final String FIND_OWNER_ID_SQL = "SELECT owner_id FROM wallets WHERE id = ?";
 
     @Override
     public Wallet save(Wallet wallet) {
@@ -44,7 +44,11 @@ public class JdbcWalletRepository implements WalletRepository {
                     }
                 }
             }
-            addUserToWalletInternal(connection, wallet.getOwnerId(), wallet.getId());
+            try (PreparedStatement linkStmt = connection.prepareStatement(ADD_USER_TO_WALLET_SQL)) {
+                linkStmt.setLong(1, wallet.getOwnerId());
+                linkStmt.setLong(2, wallet.getId());
+                linkStmt.executeUpdate();
+            }
             connection.commit();
             logger.debug("Wallet saved with ID: {}, ownerId: {}", wallet.getId(), wallet.getOwnerId());
             return wallet;
@@ -66,29 +70,27 @@ public class JdbcWalletRepository implements WalletRepository {
                     connection.setAutoCommit(true);
                     connection.close();
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    logger.error("Error closing connection", e);
                 }
             }
         }
     }
     @Override
-    public void addUserToWallet(long userId, long walletId) {
-        try (Connection connection = DatabaseManager.getConnection()) {
-            addUserToWalletInternal(connection, userId, walletId);
-        } catch (SQLException e) {
-            if ("23505".equals(e.getSQLState())) {
-                System.out.println("User " + userId + " is already in wallet " + walletId);
-            } else {
-                throw new RepositoryException("Error adding user to wallet", e);
+    public Optional<Wallet> findById(long id) {
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(FIND_BY_ID_SQL)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    logger.debug("Wallet found by ID: {}", id);
+                    return Optional.of(mapRowToWallet(rs));
+                }
             }
+        } catch (SQLException e) {
+            logger.error("Error finding wallet by id: {}", id, e);
+            throw new RepositoryException("Error finding wallet by id: " + id, e);
         }
-    }
-    private void addUserToWalletInternal(Connection connection, long userId, long walletId) throws SQLException {
-        try (PreparedStatement linkStmt = connection.prepareStatement(ADD_USER_TO_WALLET_SQL)) {
-            linkStmt.setLong(1, userId);
-            linkStmt.setLong(2, walletId);
-            linkStmt.executeUpdate();
-        }
+        return Optional.empty();
     }
 
     @Override
@@ -111,24 +113,6 @@ public class JdbcWalletRepository implements WalletRepository {
     }
 
     @Override
-    public Optional<Wallet> findById(long id) {
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(FIND_BY_ID_SQL)) {
-            stmt.setLong(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    logger.debug("Wallet found by ID: {}", id);
-                    return Optional.of(mapRowToWallet(rs));
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding wallet by id: {}", id, e);
-            throw new RepositoryException("Error finding wallet by id: " + id, e);
-        }
-        return Optional.empty();
-    }
-
-    @Override
     public void update(Wallet wallet) {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement stmt = connection.prepareStatement(UPDATE_SQL)) {
@@ -145,25 +129,39 @@ public class JdbcWalletRepository implements WalletRepository {
             throw new RepositoryException("Error updating wallet with id " + wallet.getId(), e);
         }
     }
+
     @Override
     public void delete(long id) {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement stmt = connection.prepareStatement(DELETE_SQL)) {
             stmt.setLong(1, id);
-            int deleted = stmt.executeUpdate();
-            logger.debug("Wallet deleted: id={}, rows affected={}", id, deleted);
+            int updated = stmt.executeUpdate();
+            if (updated == 0) {
+                logger.warn("No wallet found to delete with id {}", id);
+            } else {
+                logger.debug("Wallet deleted: id={}, rows affected={}", id, updated);
+            }
         } catch (SQLException e) {
             logger.error("Error deleting wallet with id {}", id, e);
             throw new RepositoryException("Error deleting wallet with id " + id, e);
         }
     }
 
-    private Wallet mapRowToWallet(ResultSet resultSet) throws SQLException {
-        return Wallet.builder()
-                .id(resultSet.getLong("id"))
-                .name(resultSet.getString("name"))
-                .ownerId(resultSet.getLong("owner_id"))
-                .build();
+    @Override
+    public void addUserToWallet(long userId, long walletId) {
+        try (Connection connection = DatabaseManager.getConnection()) {
+            try (PreparedStatement linkStmt = connection.prepareStatement(ADD_USER_TO_WALLET_SQL)) {
+                linkStmt.setLong(1, userId);
+                linkStmt.setLong(2, walletId);
+                linkStmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            if ("23505".equals(e.getSQLState())) {
+                logger.debug("User {} is already in wallet {}", userId, walletId);
+            } else {
+                throw new RepositoryException("Error adding user to wallet", e);
+            }
+        }
     }
 
     @Override
@@ -182,6 +180,7 @@ public class JdbcWalletRepository implements WalletRepository {
             throw new RepositoryException("Error checking wallet share for wallet " + walletId, e);
         }
     }
+
     @Override
     public Optional<Long> findOwnerId(long walletId) {
         try (Connection connection = DatabaseManager.getConnection();
@@ -199,5 +198,13 @@ public class JdbcWalletRepository implements WalletRepository {
             throw new RepositoryException("Error finding owner for wallet " + walletId, e);
         }
         return Optional.empty();
+    }
+
+    private Wallet mapRowToWallet(ResultSet resultSet) throws SQLException {
+        return Wallet.builder()
+                .id(resultSet.getLong("id"))
+                .name(resultSet.getString("name"))
+                .ownerId(resultSet.getLong("owner_id"))
+                .build();
     }
 }

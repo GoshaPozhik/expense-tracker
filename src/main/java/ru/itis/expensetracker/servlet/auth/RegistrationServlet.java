@@ -1,16 +1,18 @@
 package ru.itis.expensetracker.servlet.auth;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.exception.ServiceException;
-import ru.itis.expensetracker.service.AuthService;
+import java.io.IOException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ru.itis.expensetracker.exception.ServiceException;
+import ru.itis.expensetracker.service.AuthService;
 
 @WebServlet("/register")
 public class RegistrationServlet extends HttpServlet {
@@ -47,8 +49,7 @@ public class RegistrationServlet extends HttpServlet {
             logger.info("User registration successful: {}", emailTrimmed);
             resp.sendRedirect(req.getContextPath() + "/login");
         } catch (ServiceException e) {
-            String emailValue = email != null ? email : "unknown";
-            logger.warn("Registration failed for email {}: {}", emailValue, e.getMessage());
+            logger.warn("Registration failed for email {}: {}", email, e.getMessage());
             req.setAttribute("error", e.getMessage());
             req.getRequestDispatcher("/WEB-INF/jsp/auth/registration.jsp").forward(req, resp);
         } catch (Exception e) {

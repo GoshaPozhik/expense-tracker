@@ -5,7 +5,6 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="<c:url value="/expenses/add"/>" id="addExpenseForm">
-                <input type="hidden" name="csrfToken" value="${csrfToken}">
                 <input type="hidden" name="walletId" value="${currentWalletId}">
                 <div class="modal-header">
                     <h5 class="modal-title">Новый расход</h5>

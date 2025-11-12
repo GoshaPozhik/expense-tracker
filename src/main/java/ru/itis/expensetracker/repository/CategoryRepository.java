@@ -10,5 +10,4 @@ public interface CategoryRepository {
     List<Category> findAvailableForUser(long userId);
     void update(Category category);
     void delete(long id);
-    List<Category> findAll();
 }

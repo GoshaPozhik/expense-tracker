@@ -14,7 +14,6 @@
                 </c:if>
 
                 <form method="post" action="<c:url value="/categories/edit"/>">
-                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <input type="hidden" name="categoryId" value="${category.id}">
 
                     <div class="mb-3">

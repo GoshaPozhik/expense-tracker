@@ -13,8 +13,8 @@ public class JdbcUserRepository implements UserRepository {
     private static final Logger logger = LoggerFactory.getLogger(JdbcUserRepository.class);
 
     private static final String SAVE_SQL = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
-    private static final String FIND_BY_EMAIL_SQL = "SELECT id, username, email, password_hash FROM users WHERE email = ?";
     private static final String FIND_BY_ID_SQL = "SELECT id, username, email, password_hash FROM users WHERE id = ?";
+    private static final String FIND_BY_EMAIL_SQL = "SELECT id, username, email, password_hash FROM users WHERE email = ?";
 
     @Override
     public User save(User user) {

@@ -20,24 +20,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<Category> getAllCategoriesForUser(long userId) {
-        return categoryRepository.findAvailableForUser(userId);
-    }
-
-    @Override
-    public Category getCategoryById(long categoryId, long userId) throws ServiceException {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ServiceException("Категория с ID " + categoryId + " не найдена."));
-
-        if (category.getUserId() != null && !category.getUserId().equals(userId)) {
-            throw new ServiceException("Доступ к категории запрещен.");
-        }
-
-        return category;
-    }
-
-    @Override
-    public Category createCategory(String name, long userId) throws ServiceException {
+    public void createCategory(String name, long userId) throws ServiceException {
         if (name == null || name.trim().isEmpty()) {
             throw new ServiceException("Название категории не может быть пустым.");
         }
@@ -55,11 +38,27 @@ public class CategoryServiceImpl implements CategoryService {
         try {
             Category saved = categoryRepository.save(category);
             logger.info("Category created: {} by user: {}", trimmedName, userId);
-            return saved;
         } catch (RepositoryException e) {
             logger.error("Error creating category: {}", trimmedName, e);
             throw new ServiceException("Не удалось создать категорию.", e);
         }
+    }
+
+    @Override
+    public List<Category> getAllCategoriesForUser(long userId) {
+        return categoryRepository.findAvailableForUser(userId);
+    }
+
+    @Override
+    public Category getCategoryById(long categoryId, long userId) throws ServiceException {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ServiceException("Категория с ID " + categoryId + " не найдена."));
+
+        if (category.getUserId() != null && !category.getUserId().equals(userId)) {
+            throw new ServiceException("Доступ к категории запрещен.");
+        }
+
+        return category;
     }
 
     @Override

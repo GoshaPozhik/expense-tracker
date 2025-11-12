@@ -1,20 +1,21 @@
 package ru.itis.expensetracker.servlet.wallets;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.exception.ServiceException;
-import ru.itis.expensetracker.model.User;
-import ru.itis.expensetracker.model.Wallet;
-import ru.itis.expensetracker.service.WalletService;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ru.itis.expensetracker.exception.ServiceException;
+import ru.itis.expensetracker.model.User;
+import ru.itis.expensetracker.model.Wallet;
+import ru.itis.expensetracker.service.WalletService;
 
 @WebServlet("/wallets/edit")
 public class UpdateWalletServlet extends HttpServlet {
@@ -27,7 +28,7 @@ public class UpdateWalletServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             String idParam = req.getParameter("id");
             User user = (User) req.getSession().getAttribute("user");
@@ -51,7 +52,7 @@ public class UpdateWalletServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
         } catch (ServiceException e) {
             req.setAttribute("error", e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home?error=" + 
+            resp.sendRedirect(req.getContextPath() + "/home?error=" +
                     URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             logger.error("Error loading wallet for edit", e);
@@ -79,13 +80,13 @@ public class UpdateWalletServlet extends HttpServlet {
             long walletId = Long.parseLong(idParam);
             walletService.updateWallet(walletId, walletName, user.getId());
 
-            resp.sendRedirect(req.getContextPath() + "/home?success=" + 
+            resp.sendRedirect(req.getContextPath() + "/home?success=" +
                     URLEncoder.encode("Кошелек успешно обновлен.", StandardCharsets.UTF_8));
         } catch (NumberFormatException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID кошелька.");
         } catch (ServiceException e) {
             logger.warn("Error updating wallet: {}", e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/home?error=" + 
+            resp.sendRedirect(req.getContextPath() + "/home?error=" +
                     URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             logger.error("Unexpected error updating wallet", e);

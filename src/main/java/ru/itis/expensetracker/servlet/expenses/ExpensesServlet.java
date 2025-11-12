@@ -1,18 +1,20 @@
 package ru.itis.expensetracker.servlet.expenses;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.dto.ExpenseDetailDto;
-import ru.itis.expensetracker.model.Category;
-import ru.itis.expensetracker.model.User;
-import ru.itis.expensetracker.service.WalletService;
+import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ru.itis.expensetracker.dto.ExpenseDetailDto;
+import ru.itis.expensetracker.model.Category;
+import ru.itis.expensetracker.model.User;
+import ru.itis.expensetracker.service.WalletService;
 
 @WebServlet("/expenses")
 public class ExpensesServlet extends HttpServlet {
@@ -42,7 +44,7 @@ public class ExpensesServlet extends HttpServlet {
 
             long walletId = Long.parseLong(walletIdParam);
 
-            if (!walletService.hasAccessToWallet(walletId, user.getId())) {
+            if (walletService.hasAccessToWallet(walletId, user.getId())) {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, "У вас нет доступа к этому кошельку.");
                 return;
             }

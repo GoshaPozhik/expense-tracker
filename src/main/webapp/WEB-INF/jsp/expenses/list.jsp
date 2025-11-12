@@ -50,7 +50,6 @@
                             <td>
                                 <a href="<c:url value="/expenses/edit"><c:param name="id" value="${expense.id}"/></c:url>" class="btn btn-warning btn-sm me-1">Ред.</a>
                                 <form method="post" action="<c:url value="/expenses/delete"/>" class="d-inline">
-                                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                                     <input type="hidden" name="expenseId" value="${expense.id}">
                                     <input type="hidden" name="walletId" value="${currentWalletId}">
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены?');">Удалить</button>

@@ -8,7 +8,6 @@
     <welcome-file>home</welcome-file>
   </welcome-file-list>
 
-  <!-- Обработка ошибок -->
   <error-page>
     <error-code>404</error-code>
     <location>/WEB-INF/jsp/error/404.jsp</location>

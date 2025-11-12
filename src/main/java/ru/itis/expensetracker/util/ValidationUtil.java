@@ -15,9 +15,9 @@ public class ValidationUtil {
 
     public static boolean isValidEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
-            return false;
+            return true;
         }
-        return EMAIL_PATTERN.matcher(email.trim()).matches();
+        return !EMAIL_PATTERN.matcher(email.trim()).matches();
     }
 
     public static boolean isValidPassword(String password) {

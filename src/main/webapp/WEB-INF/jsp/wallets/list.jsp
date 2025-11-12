@@ -36,7 +36,6 @@
                                 <a href="<c:url value="/wallets/edit"><c:param name="id" value="${wallet.id}"/></c:url>" 
                                    class="btn btn-warning btn-sm">Ред.</a>
                                 <form method="post" action="<c:url value="/wallets/delete"/>" class="d-inline">
-                                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                                     <input type="hidden" name="walletId" value="${wallet.id}">
                                     <button type="submit" class="btn btn-danger btn-sm" 
                                             onclick="return confirm('Вы уверены, что хотите удалить кошелек? Все расходы в этом кошельке будут удалены.');">Удалить</button>

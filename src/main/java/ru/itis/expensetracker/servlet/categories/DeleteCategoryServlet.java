@@ -1,18 +1,20 @@
 package ru.itis.expensetracker.servlet.categories;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.exception.ServiceException;
-import ru.itis.expensetracker.model.User;
-import ru.itis.expensetracker.service.CategoryService;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ru.itis.expensetracker.exception.ServiceException;
+import ru.itis.expensetracker.model.User;
+import ru.itis.expensetracker.service.CategoryService;
 
 @WebServlet("/categories/delete")
 public class DeleteCategoryServlet extends HttpServlet {
@@ -43,13 +45,13 @@ public class DeleteCategoryServlet extends HttpServlet {
             long categoryId = Long.parseLong(idParam);
             categoryService.deleteCategory(categoryId, user.getId());
 
-            resp.sendRedirect(req.getContextPath() + "/categories?success=" + 
+            resp.sendRedirect(req.getContextPath() + "/categories?success=" +
                     URLEncoder.encode("Категория успешно удалена.", StandardCharsets.UTF_8));
         } catch (NumberFormatException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Некорректный ID категории.");
         } catch (ServiceException e) {
             logger.warn("Error deleting category: {}", e.getMessage());
-            resp.sendRedirect(req.getContextPath() + "/categories?error=" + 
+            resp.sendRedirect(req.getContextPath() + "/categories?error=" +
                     URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         } catch (Exception e) {
             logger.error("Unexpected error deleting category", e);

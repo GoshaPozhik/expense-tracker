@@ -25,12 +25,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public User register(String username, String email, String password, String confirmPassword) throws ServiceException {
+    public void register(String username, String email, String password, String confirmPassword) throws ServiceException {
         if (!ValidationUtil.isValidUsername(username)) {
             throw new ServiceException("Имя пользователя должно содержать от 3 до 50 символов.");
         }
         
-        if (!ValidationUtil.isValidEmail(email)) {
+        if (ValidationUtil.isValidEmail(email)) {
             throw new ServiceException("Некорректный формат email адреса.");
         }
         
@@ -65,8 +65,6 @@ public class AuthServiceImpl implements AuthService {
             walletRepository.save(personalWallet);
             logger.debug("Personal wallet created for user: {}", savedUser.getId());
 
-            return savedUser;
-
         } catch (RepositoryException e) {
             logger.error("Error registering user: {}", email, e);
             throw new ServiceException("Не удалось зарегистрировать пользователя.", e);
@@ -75,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Optional<User> login(String email, String password) {
-        if (!ValidationUtil.isValidEmail(email)) {
+        if (ValidationUtil.isValidEmail(email)) {
             return Optional.empty();
         }
         

@@ -17,7 +17,6 @@ public class JdbcCategoryRepository implements CategoryRepository {
     private static final String SAVE_SQL = "INSERT INTO categories (name, user_id) VALUES (?, ?)";
     private static final String FIND_BY_ID_SQL = "SELECT id, name, user_id FROM categories WHERE id = ?";
     private static final String FIND_AVAILABLE_SQL = "SELECT id, name, user_id FROM categories WHERE user_id = ? OR user_id IS NULL";
-    private static final String FIND_ALL_SQL = "SELECT id, name, user_id FROM categories";
     private static final String UPDATE_SQL = "UPDATE categories SET name = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM categories WHERE id = ?";
 
@@ -83,21 +82,6 @@ public class JdbcCategoryRepository implements CategoryRepository {
     }
 
     @Override
-    public List<Category> findAll() {
-        List<Category> categories = new ArrayList<>();
-        try (Connection connection = DatabaseManager.getConnection();
-             PreparedStatement statement = connection.prepareStatement(FIND_ALL_SQL);
-             ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                categories.add(mapRowToCategory(rs));
-            }
-        } catch (SQLException e) {
-            throw new RepositoryException("Error finding all categories", e);
-        }
-        return categories;
-    }
-
-    @Override
     public void update(Category category) {
         try (Connection connection = DatabaseManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
@@ -115,8 +99,12 @@ public class JdbcCategoryRepository implements CategoryRepository {
         try (Connection connection = DatabaseManager.getConnection();
             PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setLong(1, id);
-            int deleted = statement.executeUpdate();
-            logger.debug("Category deleted: id={}, rows affected={}", id, deleted);
+            int updated = statement.executeUpdate();
+            if (updated == 0) {
+                logger.warn("No category found to delete with id {}", id);
+            } else {
+                logger.debug("Category deleted: id={}, rows affected={}", id, updated);
+            }
         } catch (SQLException e) {
             logger.error("Error deleting category with id {}", id, e);
             throw new RepositoryException("Error deleting category with id " + id, e);

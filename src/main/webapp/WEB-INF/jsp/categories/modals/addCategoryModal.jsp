@@ -5,7 +5,6 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="<c:url value="/categories/add"/>" id="addCategoryForm">
-                <input type="hidden" name="csrfToken" value="${csrfToken}">
                 <div class="modal-header">
                     <h5 class="modal-title">Новая категория</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

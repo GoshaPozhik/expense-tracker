@@ -1,18 +1,19 @@
 package ru.itis.expensetracker.servlet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.itis.expensetracker.model.User;
-import ru.itis.expensetracker.model.Wallet;
-import ru.itis.expensetracker.service.WalletService;
+import java.io.IOException;
+import java.util.List;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ru.itis.expensetracker.model.User;
+import ru.itis.expensetracker.model.Wallet;
+import ru.itis.expensetracker.service.WalletService;
 
 @WebServlet("/home")
 public class HomeServlet extends HttpServlet {
@@ -25,7 +26,7 @@ public class HomeServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             User user = (User) req.getSession().getAttribute("user");
             if (user == null) {

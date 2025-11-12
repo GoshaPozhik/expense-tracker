@@ -42,6 +42,18 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
+    public Wallet getWalletById(long walletId, long userId) throws ServiceException {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
+
+        if (hasAccessToWallet(walletId, userId)) {
+            throw new ServiceException("Доступ к кошельку запрещен.");
+        }
+
+        return wallet;
+    }
+
+    @Override
     public List<ExpenseDetailDto> getDetailedExpensesForWallet(long walletId) {
         List<Expense> expenses = expenseRepository.findAllByWalletId(walletId);
         return expenses.stream()
@@ -67,12 +79,56 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
+    public Expense getExpenseById(long expenseId, long userId) throws ServiceException {
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new ServiceException("Расход не найден."));
+        if (hasAccessToWallet(expense.getWalletId(), userId)) {
+            throw new ServiceException("Доступ запрещен.");
+        }
+        return expense;
+    }
+
+    @Override
     public List<Category> getAvailableCategoriesForUser(long userId) {
         return categoryRepository.findAvailableForUser(userId);
     }
 
     @Override
-    public Expense addExpense(BigDecimal amount, String description, long userId, long walletId, long categoryId) throws ServiceException {
+    public boolean hasAccessToWallet(long walletId, long userId) {
+        Optional<Long> ownerIdOpt = walletRepository.findOwnerId(walletId);
+        if (ownerIdOpt.isPresent() && ownerIdOpt.get() == userId) {
+            return false;
+        }
+        return !walletRepository.isSharedWith(walletId, userId);
+    }
+
+    @Override
+    public void createWallet(String walletName, long userId) throws ServiceException {
+        if (walletName == null || walletName.trim().isEmpty()) {
+            throw new ServiceException("Название кошелька не может быть пустым.");
+        }
+
+        if (userRepository.findById(userId).isEmpty()) {
+            throw new ServiceException("Пользователь не найден.");
+        }
+
+        Wallet wallet = Wallet.builder()
+                .name(walletName.trim())
+                .ownerId(userId)
+                .build();
+
+        try {
+            Wallet saved = walletRepository.save(wallet);
+            logger.debug("Wallet created: id={}, name={}, ownerId={}", 
+                    saved.getId(), saved.getName(), saved.getOwnerId());
+        } catch (RepositoryException e) {
+            logger.error("Error creating wallet", e);
+            throw new ServiceException("Не удалось создать кошелек.", e);
+        }
+    }
+
+    @Override
+    public void addExpense(BigDecimal amount, String description, long userId, long walletId, long categoryId) throws ServiceException {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new ServiceException("Сумма расхода должна быть положительной.");
         }
@@ -95,11 +151,57 @@ public class WalletServiceImpl implements WalletService {
             Expense saved = expenseRepository.save(expense);
             logger.debug("Expense added: id={}, amount={}, walletId={}, userId={}", 
                     saved.getId(), amount, walletId, userId);
-            return saved;
         } catch (RepositoryException e) {
             logger.error("Error adding expense", e);
             throw new ServiceException("Не удалось добавить расход.", e);
         }
+    }
+
+    @Override
+    public void updateWallet(long walletId, String walletName, long userId) throws ServiceException {
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
+
+        if (!wallet.getOwnerId().equals(userId)) {
+            throw new ServiceException("Только владелец может редактировать кошелек.");
+        }
+
+        if (walletName == null || walletName.trim().isEmpty()) {
+            throw new ServiceException("Название кошелька не может быть пустым.");
+        }
+
+        String trimmedName = walletName.trim();
+        if (trimmedName.length() > 100) {
+            throw new ServiceException("Название кошелька не может превышать 100 символов.");
+        }
+
+        wallet.setName(trimmedName);
+
+        try {
+            walletRepository.update(wallet);
+            logger.info("Wallet updated: {} by user: {}", walletId, userId);
+        } catch (RepositoryException e) {
+            logger.error("Error updating wallet: {}", walletId, e);
+            throw new ServiceException("Не удалось обновить кошелек.", e);
+        }
+    }
+
+    @Override
+    public void updateExpense(Expense expenseUpdates, long userId) throws ServiceException {
+        Expense existingExpense = expenseRepository.findById(expenseUpdates.getId())
+                .orElseThrow(() -> new ServiceException("Расход с ID " + expenseUpdates.getId() + " не найден."));
+
+        if (hasAccessToWallet(existingExpense.getWalletId(), userId)) {
+            throw new ServiceException("Доступ запрещен.");
+        }
+
+        existingExpense.setAmount(expenseUpdates.getAmount());
+        existingExpense.setDescription(expenseUpdates.getDescription());
+        existingExpense.setCategoryId(expenseUpdates.getCategoryId());
+
+        expenseRepository.update(existingExpense);
+        logger.debug("Expense updated: expenseId={}, walletId={}, userId={}", 
+                existingExpense.getId(), existingExpense.getWalletId(), userId);
     }
 
     @Override
@@ -133,117 +235,13 @@ public class WalletServiceImpl implements WalletService {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ServiceException("Расход с ID " + expenseId + " не найден."));
         long walletId = expense.getWalletId();
-        if (!hasAccessToWallet(walletId, userId)) {
+        if (hasAccessToWallet(walletId, userId)) {
             logger.warn("Access denied for expense deletion: expenseId={}, userId={}, walletId={}", 
                     expenseId, userId, walletId);
             throw new ServiceException("Доступ запрещен. У вас нет прав на удаление расходов в этом кошельке.");
         }
         expenseRepository.delete(expenseId);
         logger.debug("Expense deleted: expenseId={}, walletId={}, userId={}", expenseId, walletId, userId);
-    }
-
-    @Override
-    public boolean hasAccessToWallet(long walletId, long userId) {
-        Optional<Long> ownerIdOpt = walletRepository.findOwnerId(walletId);
-        if (ownerIdOpt.isPresent() && ownerIdOpt.get() == userId) {
-            return true;
-        }
-        return walletRepository.isSharedWith(walletId, userId);
-    }
-
-    @Override
-    public void updateExpense(Expense expenseUpdates, long userId) throws ServiceException {
-        Expense existingExpense = expenseRepository.findById(expenseUpdates.getId())
-                .orElseThrow(() -> new ServiceException("Расход с ID " + expenseUpdates.getId() + " не найден."));
-
-        if (!hasAccessToWallet(existingExpense.getWalletId(), userId)) {
-            throw new ServiceException("Доступ запрещен.");
-        }
-
-        existingExpense.setAmount(expenseUpdates.getAmount());
-        existingExpense.setDescription(expenseUpdates.getDescription());
-        existingExpense.setCategoryId(expenseUpdates.getCategoryId());
-
-        expenseRepository.update(existingExpense);
-        logger.debug("Expense updated: expenseId={}, walletId={}, userId={}", 
-                existingExpense.getId(), existingExpense.getWalletId(), userId);
-    }
-
-    @Override
-    public Expense getExpenseById(long expenseId, long userId) throws ServiceException {
-        Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new ServiceException("Расход не найден."));
-        if (!hasAccessToWallet(expense.getWalletId(), userId)) {
-            throw new ServiceException("Доступ запрещен.");
-        }
-        return expense;
-    }
-
-    @Override
-    public Wallet createWallet(String walletName, long userId) throws ServiceException {
-        if (walletName == null || walletName.trim().isEmpty()) {
-            throw new ServiceException("Название кошелька не может быть пустым.");
-        }
-
-        if (userRepository.findById(userId).isEmpty()) {
-            throw new ServiceException("Пользователь не найден.");
-        }
-
-        Wallet wallet = Wallet.builder()
-                .name(walletName.trim())
-                .ownerId(userId)
-                .build();
-
-        try {
-            Wallet saved = walletRepository.save(wallet);
-            logger.debug("Wallet created: id={}, name={}, ownerId={}", 
-                    saved.getId(), saved.getName(), saved.getOwnerId());
-            return saved;
-        } catch (RepositoryException e) {
-            logger.error("Error creating wallet", e);
-            throw new ServiceException("Не удалось создать кошелек.", e);
-        }
-    }
-
-    @Override
-    public Wallet getWalletById(long walletId, long userId) throws ServiceException {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
-
-        if (!hasAccessToWallet(walletId, userId)) {
-            throw new ServiceException("Доступ к кошельку запрещен.");
-        }
-
-        return wallet;
-    }
-
-    @Override
-    public void updateWallet(long walletId, String walletName, long userId) throws ServiceException {
-        Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new ServiceException("Кошелек с ID " + walletId + " не найден."));
-
-        if (!wallet.getOwnerId().equals(userId)) {
-            throw new ServiceException("Только владелец может редактировать кошелек.");
-        }
-
-        if (walletName == null || walletName.trim().isEmpty()) {
-            throw new ServiceException("Название кошелька не может быть пустым.");
-        }
-
-        String trimmedName = walletName.trim();
-        if (trimmedName.length() > 100) {
-            throw new ServiceException("Название кошелька не может превышать 100 символов.");
-        }
-
-        wallet.setName(trimmedName);
-
-        try {
-            walletRepository.update(wallet);
-            logger.info("Wallet updated: {} by user: {}", walletId, userId);
-        } catch (RepositoryException e) {
-            logger.error("Error updating wallet: {}", walletId, e);
-            throw new ServiceException("Не удалось обновить кошелек.", e);
-        }
     }
 
     @Override

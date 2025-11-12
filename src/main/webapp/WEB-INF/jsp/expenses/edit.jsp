@@ -14,7 +14,6 @@
                 </c:if>
 
                 <form method="post" action="<c:url value="/expenses/edit"/>">
-                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <input type="hidden" name="expenseId" value="${expense.id}">
                     <input type="hidden" name="walletId" value="${expense.walletId}">
 

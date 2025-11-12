@@ -56,7 +56,6 @@
                                             <a href="<c:url value="/categories/edit"><c:param name="id" value="${category.id}"/></c:url>" 
                                                class="btn btn-warning btn-sm me-1">Ред.</a>
                                             <form method="post" action="<c:url value="/categories/delete"/>" class="d-inline">
-                                                <input type="hidden" name="csrfToken" value="${csrfToken}">
                                                 <input type="hidden" name="categoryId" value="${category.id}">
                                                 <button type="submit" class="btn btn-danger btn-sm" 
                                                         onclick="return confirm('Вы уверены, что хотите удалить категорию?');">Удалить</button>

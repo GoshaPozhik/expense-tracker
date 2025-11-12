@@ -15,8 +15,8 @@ public class JdbcExpenseRepository implements ExpenseRepository {
     private static final Logger logger = LoggerFactory.getLogger(JdbcExpenseRepository.class);
 
     private static final String SAVE_SQL = "INSERT INTO expenses (amount, description, expense_date, user_id, wallet_id, category_id) VALUES (?, ?, ?, ?, ?, ?)";
-    private static final String FIND_BY_WALLET_SQL = "SELECT id, amount, description, expense_date, user_id, wallet_id, category_id FROM expenses WHERE wallet_id = ? ORDER BY expense_date DESC";
     private static final String FIND_BY_ID_SQL = "SELECT id, amount, description, expense_date, user_id, wallet_id, category_id FROM expenses WHERE id = ?";
+    private static final String FIND_BY_WALLET_SQL = "SELECT id, amount, description, expense_date, user_id, wallet_id, category_id FROM expenses WHERE wallet_id = ? ORDER BY expense_date DESC";
     private static final String UPDATE_SQL = "UPDATE expenses SET amount = ?, description = ?, category_id = ?, expense_date = ? WHERE id = ?";
     private static final String DELETE_SQL = "DELETE FROM expenses WHERE id = ?";
 
@@ -105,8 +105,12 @@ public class JdbcExpenseRepository implements ExpenseRepository {
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
             statement.setLong(1, id);
-            int deleted = statement.executeUpdate();
-            logger.debug("Expense deleted: id={}, rows affected={}", id, deleted);
+            int updated = statement.executeUpdate();
+            if (updated == 0) {
+                logger.warn("No expense found to delete with id {}", id);
+            } else {
+                logger.debug("Expense deleted: id={}, rows affected={}", id, updated);
+            }
         } catch (SQLException e) {
             logger.error("Error deleting expense with id {}", id, e);
             throw new RepositoryException("Error deleting expense with id " + id, e);

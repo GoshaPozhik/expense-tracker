@@ -5,7 +5,6 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="<c:url value="/wallets/create"/>">
-                <input type="hidden" name="csrfToken" value="${csrfToken}">
                 <div class="modal-header">
                     <h5 class="modal-title">Создание нового кошелька</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

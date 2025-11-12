@@ -15,7 +15,6 @@
                 </c:if>
 
                 <form method="post" action="<c:url value="/register"/>" id="registrationForm">
-                    <input type="hidden" name="csrfToken" value="${csrfToken}">
                     <div class="mb-3">
                         <label for="username" class="form-label">Имя пользователя</label>
                         <input type="text" class="form-control" id="username" name="username" required>

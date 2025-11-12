@@ -5,6 +5,6 @@ import ru.itis.expensetracker.model.User;
 import java.util.Optional;
 
 public interface AuthService {
-    User register(String username, String email, String password, String confirmPassword) throws ServiceException;
+    void register(String username, String email, String password, String confirmPassword) throws ServiceException;
     Optional<User> login(String email, String password);
 }

@@ -6,9 +6,9 @@ import ru.itis.expensetracker.model.Category;
 import java.util.List;
 
 public interface CategoryService {
+    void createCategory(String name, long userId) throws ServiceException;
     List<Category> getAllCategoriesForUser(long userId);
     Category getCategoryById(long categoryId, long userId) throws ServiceException;
-    Category createCategory(String name, long userId) throws ServiceException;
     void updateCategory(long categoryId, String name, long userId) throws ServiceException;
     void deleteCategory(long categoryId, long userId) throws ServiceException;
 }
